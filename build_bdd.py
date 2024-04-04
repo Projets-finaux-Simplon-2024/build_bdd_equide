@@ -20,10 +20,12 @@ driver.get(url)
 # Si on prend entre 2024 et 2015 : 637 237 chevaux
 # A 100 chevaux par par page : 6372,37 (6373)
 
-nombre_de_pages = 2  # Ajustez ce nombre selon vos besoins
-
 # Enregistrer l'heure de début
 start_time = time.time()
+
+nombre_de_pages = 2  # Ajustez ce nombre selon vos besoins
+
+
 
 try:
     for i in range(nombre_de_pages):
