@@ -1,2 +1,7 @@
+#environnement
 /scraping
+/envScraping
+
+/__pycache__
 .history
+*.csv
