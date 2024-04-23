@@ -1,19 +1,17 @@
 # Imports -------------------------------------------------------------------------------------------------------------------------------------------
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
-from webdriver_manager.chrome import ChromeDriverManager
 
 from calcul_nb_pages import calcul_nb_pages
 from cut_article import cut_article
+from connexions_files.con_ifce import connexion_ifce
 
 import time
 import pandas as pd
 import sys
+import os
 #----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -22,16 +20,8 @@ import sys
 
 # Configuration du pilote Selenium et ouverture du navigateur ---------------------------------------------------------------------------------------
 # Configurer les options Chrome pour le mode headless
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--window-size=1920,1080")  # Simuler une taille de fenêtre standard
-chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
-
-driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
-url = 'https://infochevaux.ifce.fr/fr/info-chevaux?utm_source=Effiweb&utm_medium=Menu%20SIRE%20Demarches&utm_campaign=SIRE%20%E2%80%93%20Infochevaux'
-driver.get(url)
+driver = connexion_ifce()
 #----------------------------------------------------------------------------------------------------------------------------------------------------
-
 
 
 
@@ -130,9 +120,16 @@ finally:
     # Afficher le DataFrame
     # print(df)
 
+    # Chemin du dossier où stocker les fichiers
+    dossier_resultats = 'resultats' 
+
+    # Vérifiez si le dossier existe, sinon créez-le
+    if not os.path.exists(dossier_resultats):
+        os.makedirs(dossier_resultats)
+
     # Enregistrer le DataFrame dans un fichier CSV
     list_annees = '_'.join(annees)
-    fichier_csv = f'donnees_chevaux_{list_annees}.csv'
+    fichier_csv = os.path.join(dossier_resultats, f'donnees_chevaux_{list_annees}.csv')
     df.to_csv(fichier_csv, index=True)
 
     # Afficher un message pour confirmer l'enregistrement

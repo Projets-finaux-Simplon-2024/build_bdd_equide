@@ -1,7 +1,12 @@
-#environnement
+# Environnement
 /scraping
 /envScraping
 
-/__pycache__
+# Cache
+**/__pycache__/ 
+# ** indique quelque soit le dossier 
+
+# Résultats
 .history
 *.csv
+resultats
