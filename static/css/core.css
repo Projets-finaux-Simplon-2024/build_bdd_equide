@@ -1,0 +1,21 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 100px; /* Hauteur du footer */
+}
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 100px; /* Hauteur du footer */
+    background-color: #f8f9fa; /* Couleur de fond du footer */
+}
+
+h1, h2, p{
+    font-family: Roboto;
+}

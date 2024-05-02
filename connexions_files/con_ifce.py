@@ -3,6 +3,9 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
+
+# Configuration du pilote Selenium et ouverture du navigateur ---------------------------------------------------------------------------------------
+# Configurer les options Chrome pour le mode headless
 def connexion_ifce() :
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -13,3 +16,4 @@ def connexion_ifce() :
     url = 'https://infochevaux.ifce.fr/fr/info-chevaux?utm_source=Effiweb&utm_medium=Menu%20SIRE%20Demarches&utm_campaign=SIRE%20%E2%80%93%20Infochevaux'
     driver.get(url)
     return(driver)
+#----------------------------------------------------------------------------------------------------------------------------------------------------

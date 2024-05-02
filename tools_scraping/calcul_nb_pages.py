@@ -9,9 +9,6 @@ import math
 #----------------------------------------------------------------------------------------------------------------------------------------------------
 
 def calcul_nb_pages(driver, annees):
-
-    #driver.set_window_size(1936, 1048)
-
     # Attendre que l'élément devienne cliquable
     wait = WebDriverWait(driver, 10)
     element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) > .card-header")))

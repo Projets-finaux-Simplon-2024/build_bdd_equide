@@ -1,0 +1,16 @@
+.year-checkbox {
+    display: block;
+    overflow: auto;
+    width: 25%;
+    height: 200px;
+    /* Définissez la hauteur souhaitée de la zone de défilement */
+    border: 1px solid #ccc;
+    /* Ajoutez une bordure pour la distinction visuelle */
+    padding: 10px;
+    /* Ajoutez un peu d'espace intérieur */
+}
+
+.year-checkbox label {
+    display: block;
+    margin-bottom: 5px;
+}
