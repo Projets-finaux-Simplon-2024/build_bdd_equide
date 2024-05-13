@@ -23,7 +23,7 @@
     {% block css %}{% endblock %}
 </head>
 <body class="d-flex flex-column">
-    <header class="bg-light">
+    <header class="bg-light" style="padding: 10px;">
         <div class="container h-100">
             <div class="row h-100 align-items-center">
                 <div class="col">
@@ -33,7 +33,7 @@
         </div>
     </header>
 
-    <div class="content">
+    <div class="content" style="margin-top: 1%;">
         <!-- Contenu principal de la page -->
         <div class="container">
             <div class="row">
@@ -45,13 +45,13 @@
     </div>
 
     <footer>
-        <div class="container h-100">
+        <div class="container h-100" style="padding: 10px;">
             <div class="row h-100 align-items-center">
                 <div class="col text-center">
                     <!-- Contenu du pied de page -->
                     {% block footer %}{% endblock %}
                     <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Logo" height="50">
-                    <p class="text-center">Copyright 2024</p>
+                    <p class="text-center">©Copyright Jérémy MIKALEFF 2024</p>
                 </div>
             </div>
         </div>

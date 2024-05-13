@@ -1,80 +1,132 @@
-{% extends "core.html" %}
+{% extends "core.html" %} 
 
 {% block css %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkBox.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/loadingModal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkBox.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loadingModal.css') }}"/>
     <style>
-        /* Style du cadre en bas */
-        .result-console {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 20px;
-            height: 200px; /* Ajustez la hauteur selon vos besoins */
-            overflow-y: auto; /* Ajoutez une barre de défilement si nécessaire */
-        }
-    </style> 
-{% endblock %}
+    /* Style du cadre en bas */
+    .result-console {
+        border: 1px solid #ccc;
+        padding: 10px;
+        height: 200px;
+        overflow-y: auto;
+    }
+    .year-list {
+        height: 200px; /* La hauteur peut être ajustée selon les besoins */
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .button-group {
+        text-align: end;
+    }
+
+    .section {
+        margin-bottom: 15px;
+    }
+    </style>
+{% endblock %} 
 
 {% block header %}
     <h1>Scraping du site des Haras de France</h1>
 {% endblock %}
 
 {% block content %}
-    <h2>Choisissez une année à scraper</h2>
+<div class="container-fluid">
+    <h2>Choisissez une ou plusieurs années à scraper</h2>
+    <form action="/scraping_chevaux_bases" id="year-form" method="post">
+        <div class="row">
+            <!-- Colonne pour la liste des années avec défilement -->
+            <div class="col-md-3">
+                <div class="form-group year-list">
+                    {% for annee in list_annees %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="annees[]" value="{{ annee }}"
+                            id="check-{{ annee }}">
+                        <label class="form-check-label" for="check-{{ annee }}">
+                            {{ annee }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
 
-    <form action="/scraping_chevaux_bases" method="post">
-        <div class="year-checkbox">
-            {% for annee in list_annees %}
-                <label>
-                    <input type="checkbox" name="annees[]" value="{{ annee }}"> {{ annee }}
-                </label>
-            {% endfor %}
+            <!-- Colonne pour afficher le résultat du scraping -->
+            <div class="col-md-9">
+                <div class="result-console">
+                    {% if heures is defined and minutes is defined and secondes is defined and nombre_chevaux is defined and
+                    nombre_pages is defined %}
+                    <p>Pour l(es) année(s) {% for i in annees %}{{ i }}, {% endfor %}</p>
+                    <p>Il y a {{ nombre_chevaux }} chevaux à scraper</p>
+                    <p>Réparti en {{ nombre_pages }} pages</p>
+                    <p>Temps total estimé pour le scraping : {{ heures }} heures {{ minutes }} minutes {{ secondes }}
+                        secondes</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        
-        <button type="submit" name="action" value="infos">Afficher le temps de scraping</button>
-        <button type="submit" name="action" value="scraping">Lancer le scraping</button> 
+        <div class="row">
+            <!-- Boutons étendus sous la colonne de résultats -->
+            <div class="col-md-3"></div> <!-- Cette colonne reste vide pour aligner avec la colonne des années -->
+            <div class="col-md-9">
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary" name="action" value="infos"
+                        style="align-items: end;">Afficher le temps de scraping</button>
+                    <button type="submit" class="btn btn-secondary" name="action" value="scraping">Lancer le
+                        scraping</button>
+                </div>
+            </div>
+        </div>
     </form>
+</div>
 
-    
-
-    <!-- Cadre pour afficher le résultat -->
-    <div class="result-console">
-        <!-- Affichez ici le résultat -->
-        {% if heures is defined and minutes is defined and secondes is defined and nombre_chevaux is defined and nombre_pages is defined %}
-            <p>Pour l(es) année(s) {% for i in annees %}{{ i }}, {% endfor %}</p>
-            <p>Il y a {{ nombre_chevaux }} chevaux à scraper</p>
-            <p>Réparti en {{ nombre_pages }} pages</p>
-            <p>Temps total estimé pour le scraping (pour 5.5s par page de 100 articles) : {{ heures }} heures {{ minutes }} minutes {{ secondes }} secondes</p>
-        {% endif %}
-
-        {% if heures_duration is defined and minutes_duration is defined and secondes_duration is defined %}
-            <p>Le fichier a été enregistrer dans  {{ fichier_csv }}</p>
-            <p>Temps total estimé pour le scraping (pour 5.5s par page de 100 articles) : {{ heures }} heures {{ minutes }} minutes {{ secondes }} secondes</p>
-            <p>Temps total réel pour le scraping : {{ heures_duration }} heures {{ minutes_duration }} minutes {{ secondes_duration }} secondes</p>
-        {% endif %}
+<!-- Section pour les fichiers -->
+<div class="container">
+    <h3>Fichiers disponibles :</h3>
+    <div class="table-responsive" style="overflow: auto;height: 225px;">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nom du fichier</th>
+                    <th>Taille (octets)</th>
+                    <th>Date de dernière modification</th>
+                    <th>Date de création</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fichier in fichiers %}
+                <tr>
+                    <td>{{ fichier.nom }}</td>
+                    <td>{{ fichier.taille }}</td>
+                    <td>{{ fichier.date_modification }}</td>
+                    <td>{{ fichier.date_creation }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <!------------------------------------->
-
-
-
-    <a href="/"><button>Retour</button></a>
-
-
-
-    <!-- Modal -->
-    <div id="loadingModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="loader"></div>
-            <p style="z-index: 100; color: #000;">Chargement...</p>
-        </div>
+    <div class="button-group" style="text-align: end;margin-top: 2%;">
+        <button class="btn btn-secondary" onclick="window.location.href='/ouvrir_dossier'">
+            Ouvrir le dossier Résultats
+        </button>
     </div>
-    <!----------->
+</div>
 
-    
+<div class="container">
+    <!-- Bouton de retour positionné en bas à gauche -->
+    <a href="/" id="return-button"><button class="btn btn-danger" >Retour</button></a>
+</div>
+
+<!-- Modal -->
+<div id="loadingModal" class="modal" style="display: none">
+  <div class="modal-content">
+    <div class="loader"></div>
+    <p style="z-index: 100; color: #000">Chargement...</p>
+  </div>
+</div>
 {% endblock %}
 
 {% block footer %}
-    <script src="{{ url_for('static', filename='js/loading.js') }}"></script> 
+    <script src="{{ url_for('static', filename='js/loading_year_check.js') }}"></script>    
 {% endblock %}
-
-

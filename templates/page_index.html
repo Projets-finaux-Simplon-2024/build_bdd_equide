@@ -2,6 +2,20 @@
 
 {% block css %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loadingModal.css') }}">
+    <style>
+        .scrapingButton {
+            width: calc(100% - 30px); /* Prend toute la largeur du conteneur avec une petite marge */
+            margin: 0 10%; /* Marge de 15px des deux côtés */
+            padding: 1% 2%; /* Padding interne pour une meilleure visibilité du texte */
+            text-align: left;
+        }
+        .background-image {
+            background-image: url("{{ url_for('static', filename='images/icons8-cheval-bizarre-96.png') }}");
+            background-size: 20%; /* Couvre toute la zone disponible, vous pouvez ajuster selon les besoins */
+            background-position: right; /* Centre l'image dans le div */
+            background-repeat: no-repeat;
+        }
+    </style>
 {% endblock %}
 
 {% block header %}
@@ -9,12 +23,26 @@
 {% endblock %}
 
 {% block content %}
-    <button id="scrapingButton">Scraping</button>
+    <div class="background-image">
+        <p>Cette application a pour objet l'aggrégation et la préparation des données pour l'étude des équidé.</p>
 
-    <div id="loadingModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="loader"></div>
-            <p style="z-index: 100; color: #000;">Chargement...</p>
+        <div class="d-flex justify-content-center mt-5">
+            <button class="btn btn-primary btn-lg scrapingButton" id="scrapingButton">Etape 1 : Récupération de la liste des chevaux</button>
+        </div>
+
+        <div class="d-flex justify-content-center mt-5">
+            <button class="btn btn-primary btn-lg scrapingButton">Etape 2 : Récupération de la généalogie et des informations supplémentaires</button>
+        </div>
+
+        <div class="d-flex justify-content-center mt-5">
+            <button class="btn btn-primary btn-lg scrapingButton">Etape 3 : Nettoyage et remplissage de la base de données</button>
+        </div>
+
+        <div id="loadingModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="loader"></div>
+                <p style="z-index: 100; color: #000;">Chargement...</p>
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -2,11 +2,14 @@
 # Libs
 import webview
 from screeninfo import get_monitors
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, make_response
 
 # Outils
 import threading
 import os
+import subprocess
+import sys
+from datetime import datetime
 
 # Local
 from tools_scraping.recup_annees import recup_annees
@@ -30,6 +33,35 @@ def index():
 
 
 
+# |---------------------------------------------------------- OUVRIR DOSSIER ------------------------------------------------------------------|
+@app.route('/ouvrir_dossier')
+def ouvrir_dossier():
+    # Obtenez le chemin absolu du dossier 'resultats' relatif à la racine du projet
+    chemin_projet = os.path.dirname(os.path.abspath(__file__))
+    chemin_dossier = os.path.join(chemin_projet, 'resultats')
+    
+    # Ouvrir le dossier avec l'explorateur de fichiers natif du système d'exploitation
+    if sys.platform == 'win32':
+        subprocess.Popen(['explorer', chemin_dossier])
+    elif sys.platform == 'darwin':  # macOS
+        subprocess.Popen(['open', chemin_dossier])
+    else:  # Linux et variantes
+        subprocess.Popen(['xdg-open', chemin_dossier])
+    
+        # Créer une réponse qui inclut un script JavaScript pour rediriger après 3 secondes
+    response = make_response("""
+    <html>
+        <head>
+            <meta http-equiv="refresh" content="3;url=/scraping_chevaux_bases" />
+        </head>
+        <body>
+            <p>Dossier ouvert.
+        Vous serez redirigé dans quelques secondes...</p>
+        </body>
+    </html>
+    """)
+    return response
+# |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 # |---------------------------------------------------------- PAGE DE SCRAPING DE BASE --------------------------------------------------------|
@@ -40,8 +72,22 @@ def scraping_chevaux_bases():
     if not list_annees:
         list_annees = recup_annees()
 
+    dossier = 'resultats'
+    fichiers = []
+    for f in os.listdir(dossier):
+        if f.startswith('donnees_chevaux_'):
+            file_path = os.path.join(dossier, f)
+            stat = os.stat(file_path)
+            fichiers.append({
+                'nom': f,
+                'taille': stat.st_size,  # Taille du fichier en octets
+                'date_modification': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),  # Dernière modification
+                'date_creation': datetime.fromtimestamp(stat.st_ctime).strftime('%Y-%m-%d %H:%M:%S')  # Date de création
+            })
+
     context = {
-        'list_annees': list_annees
+        'list_annees': list_annees,
+        'fichiers':fichiers
     }
 
     if request.method == 'POST':
@@ -133,8 +179,8 @@ if __name__ == "__main__":
     screen_height = get_monitors()[0].height
 
     # Calculer la largeur et la hauteur de la fenêtre en pourcentage de la taille de l'écran
-    width_percent = 70  # % de la largeur de l'écran
-    height_percent = 70  # % de la hauteur de l'écran
+    width_percent = 80  # % de la largeur de l'écran
+    height_percent = 85  # % de la hauteur de l'écran
 
     width = int(screen_width * (width_percent / 100))
     height = int(screen_height * (height_percent / 100))
