@@ -64,6 +64,9 @@ def ouvrir_dossier():
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 
+
+
+
 # |---------------------------------------------------------- PAGE DE SCRAPING DE BASE --------------------------------------------------------|
 @app.route("/scraping_chevaux_bases", methods=['GET', 'POST'])
 def scraping_chevaux_bases():
@@ -80,7 +83,7 @@ def scraping_chevaux_bases():
             stat = os.stat(file_path)
             fichiers.append({
                 'nom': f,
-                'taille': stat.st_size,  # Taille du fichier en octets
+                'taille': stat.st_size/1000,  # Taille du fichier en kilo-octets
                 'date_modification': datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),  # Dernière modification
                 'date_creation': datetime.fromtimestamp(stat.st_ctime).strftime('%Y-%m-%d %H:%M:%S')  # Date de création
             })
@@ -102,7 +105,7 @@ def scraping_chevaux_bases():
         nombre_chevaux, nombre_pages = calcul_nb_pages(driver, annees)
 
         # Temps de scraping par page en secondes
-        temps_par_page = 5.5
+        temps_par_page = 3.5
 
         # Calculer le temps total en secondes
         temps_total_secondes = nombre_pages * temps_par_page
@@ -116,7 +119,7 @@ def scraping_chevaux_bases():
         print('\n---------------------------------------------------------------------------------------------------------------------------------')
         print(f"Nombre de chevaux : {nombre_chevaux}")
         print(f"Nombre de pages : {nombre_pages}")
-        print(f"Temps total estimé pour le scraping (pour 5.5s par page de 100 articles): {heures} heures {minutes} minutes {secondes} secondes")
+        print(f"Temps total estimé pour le scraping (pour 3.5s par page de 100 articles): {heures} heures {minutes} minutes {secondes} secondes")
         print('---------------------------------------------------------------------------------------------------------------------------------\n')
 
         if action == 'infos':
@@ -134,7 +137,7 @@ def scraping_chevaux_bases():
         
         if action == 'scraping':
 
-            duration, fichier_csv = scraping_chevaux_infos_generales(driver, nombre_pages, annees)
+            nb_chevaux_scrap, duration, fichier_csv = scraping_chevaux_infos_generales(driver, nombre_pages, annees)
 
             # Convertir le temps total en heures, minutes et secondes
             heures_duration = duration // 3600
@@ -154,6 +157,7 @@ def scraping_chevaux_bases():
             context['minutes_duration'] = minutes_duration
             context['secondes_duration'] = secondes_duration
             context['fichier_csv'] = fichier_csv
+            context['nb_chevaux_scrap'] = nb_chevaux_scrap
 
             return render_template('page_scraping_chevaux_bases.html', **context)
 
@@ -167,6 +171,8 @@ def scraping_chevaux_bases():
 
 # |---------------------------------------------------------- CREATION DE LA FENËTRE ----------------------------------------------------------|
 def flask_thread():
+    # debug=True :          donne le reload auto et les logs détaillés
+    # use_reloader=True :   applique juste le reload automatique
     app.run(use_reloader=False, port=5000)
 
 if __name__ == "__main__":
@@ -179,8 +185,8 @@ if __name__ == "__main__":
     screen_height = get_monitors()[0].height
 
     # Calculer la largeur et la hauteur de la fenêtre en pourcentage de la taille de l'écran
-    width_percent = 80  # % de la largeur de l'écran
-    height_percent = 85  # % de la hauteur de l'écran
+    width_percent = 70  # % de la largeur de l'écran
+    height_percent = 75  # % de la hauteur de l'écran
 
     width = int(screen_width * (width_percent / 100))
     height = int(screen_height * (height_percent / 100))

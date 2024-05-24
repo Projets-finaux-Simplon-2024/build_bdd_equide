@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 def recup_annees():
         driver = connexion_ifce()
         try:
-            wait = WebDriverWait(driver, 10)
+            wait = WebDriverWait(driver, 45)
             
             # Cliquer sur le bouton pour dérouler la liste des années si nécessaire
             toggle_button = wait.until(EC.element_to_be_clickable((By.ID, "reproducteur-annee_naissance_cheval")))

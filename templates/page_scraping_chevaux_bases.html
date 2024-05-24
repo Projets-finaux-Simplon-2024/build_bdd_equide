@@ -4,32 +4,32 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/checkBox.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/loadingModal.css') }}"/>
     <style>
-    /* Style du cadre en bas */
-    .result-console {
-        border: 1px solid #ccc;
-        padding: 10px;
-        height: 200px;
-        overflow-y: auto;
-    }
-    .year-list {
-        height: 200px; /* La hauteur peut être ajustée selon les besoins */
-        overflow-y: auto;
-        border: 1px solid #ccc;
-        padding: 10px;
-    }
+        /* Style du cadre en bas */
+        .result-console {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .year-list {
+            height: 200px; /* La hauteur peut être ajustée selon les besoins */
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
 
-    .button-group {
-        text-align: end;
-    }
+        .button-group {
+            text-align: end;
+        }
 
-    .section {
-        margin-bottom: 15px;
-    }
+        .section {
+            margin-bottom: 15px;
+        }
     </style>
 {% endblock %} 
 
 {% block header %}
-    <h1>Scraping du site des Haras de France</h1>
+    <h1>Scraping des Trotteurs Français du site des Haras de France</h1>
 {% endblock %}
 
 {% block content %}
@@ -42,8 +42,7 @@
                 <div class="form-group year-list">
                     {% for annee in list_annees %}
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="annees[]" value="{{ annee }}"
-                            id="check-{{ annee }}">
+                        <input class="form-check-input" type="checkbox" name="annees[]" value="{{ annee }}" id="check-{{ annee }}">
                         <label class="form-check-label" for="check-{{ annee }}">
                             {{ annee }}
                         </label>
@@ -55,26 +54,50 @@
             <!-- Colonne pour afficher le résultat du scraping -->
             <div class="col-md-9">
                 <div class="result-console">
-                    {% if heures is defined and minutes is defined and secondes is defined and nombre_chevaux is defined and
-                    nombre_pages is defined %}
-                    <p>Pour l(es) année(s) {% for i in annees %}{{ i }}, {% endfor %}</p>
-                    <p>Il y a {{ nombre_chevaux }} chevaux à scraper</p>
-                    <p>Réparti en {{ nombre_pages }} pages</p>
-                    <p>Temps total estimé pour le scraping : {{ heures }} heures {{ minutes }} minutes {{ secondes }}
-                        secondes</p>
+                    {% if heures is defined and minutes is defined and secondes is defined and nombre_chevaux is defined and nombre_pages is defined %}
+                        <p>Pour l(es) année(s) {% for i in annees %}{{ i }}, {% endfor %}</p>
+                        <p>Il y a {{ nombre_chevaux }} chevaux à scraper</p>
+                        <p>Réparti en {{ nombre_pages }} pages</p>
+                        <p>Temps total estimé pour le scraping : {{ heures }} heures {{ minutes }} minutes {{ secondes }} secondes</p>
+                    {% endif %}
+
+                    {% if heures is defined and minutes is defined and secondes is defined and nb_chevaux_scrap is defined %}
+                        <p>Pour l(es) année(s) {% for i in annees %}{{ i }}, {% endfor %}</p>
+                        <p>Il y a {{ nb_chevaux_scrap }} Trotteur Français scraper</p>
+                        <p>Temps qui a été estimé pour le scraping : {{ heures }} heures {{ minutes }} minutes {{ secondes }} secondes</p>
+                        <p>Temps final réel de scraping : {{ heures_duration }} heures {{ minutes_duration }} minutes {{ secondes_duration }} secondes</p>
+                        <p>Les données ont été enregistrées dans le fichier {{ fichier_csv }}</p>
                     {% endif %}
                 </div>
             </div>
         </div>
         <div class="row">
             <!-- Boutons étendus sous la colonne de résultats -->
-            <div class="col-md-3"></div> <!-- Cette colonne reste vide pour aligner avec la colonne des années -->
-            <div class="col-md-9">
+            <div class="col-md-6">
+                <!-- Bouton pour tout décocher -->
+                <button type="button" class="btn btn-warning btn-sm decade-button m-1 p-1" onclick="uncheckAll()">Tout décocher</button>
+
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkAll()" >Tout cocher</button>
+
+                <!-- Boutons pour chaque décennie -->
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1950, 1959)">1950-1959</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1960, 1969)">1960-1969</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1970, 1974)">1970-1974</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1975, 1979)">1975-1979</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1980, 1984)">1980-1984</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1985, 1989)">1985-1989</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1990, 1994)">1990-1994</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(1995, 1999)">1995-1999</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(2000, 2004)">2000-2004</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(2005, 2009)">2005-2009</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(2010, 2014)">2010-2014</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(2015, 2019)">2015-2019</button>
+                <button type="button" class="btn btn-info btn-sm m-1 p-1" onclick="checkDecade(2020, 2024)">2020-2024</button>
+            </div> <!-- Cette colonne reste vide pour aligner avec la colonne des années -->
+            <div class="col-md-6">
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary" name="action" value="infos"
-                        style="align-items: end;">Afficher le temps de scraping</button>
-                    <button type="submit" class="btn btn-secondary" name="action" value="scraping">Lancer le
-                        scraping</button>
+                    <button type="submit" class="btn btn-primary" name="action" value="infos" onclick="showTimeInfo();">Afficher le temps de scraping</button>
+                    <button type="submit" class="btn btn-secondary" name="action" value="scraping" onclick="startTimer();">Lancer le scraping</button>    
                 </div>
             </div>
         </div>
@@ -82,14 +105,14 @@
 </div>
 
 <!-- Section pour les fichiers -->
-<div class="container">
+<div class="container" style="padding-top: 1%;">
     <h3>Fichiers disponibles :</h3>
-    <div class="table-responsive" style="overflow: auto;height: 225px;">
+    <div class="table-responsive" style="overflow: auto;max-height: 16vw;">
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Nom du fichier</th>
-                    <th>Taille (octets)</th>
+                    <th>Taille (Kilo-octets)</th>
                     <th>Date de dernière modification</th>
                     <th>Date de création</th>
                 </tr>
@@ -106,27 +129,51 @@
             </tbody>
         </table>
     </div>
-    <div class="button-group" style="text-align: end;margin-top: 2%;">
-        <button class="btn btn-secondary" onclick="window.location.href='/ouvrir_dossier'">
-            Ouvrir le dossier Résultats
-        </button>
+    <div class="row" style="padding-top: 1%;">
+        <div class="col-md-6 text-left">
+            <a href="/" id="return-button"><button class="btn btn-danger">Retour</button></a>
+        </div>
+        <div class="col-md-6 text-right">
+            <button class="btn btn-secondary" onclick="window.location.href='/ouvrir_dossier'">
+                Ouvrir le dossier Résultats
+            </button>
+        </div>
     </div>
 </div>
 
-<div class="container">
-    <!-- Bouton de retour positionné en bas à gauche -->
-    <a href="/" id="return-button"><button class="btn btn-danger" >Retour</button></a>
-</div>
-
 <!-- Modal -->
-<div id="loadingModal" class="modal" style="display: none">
-  <div class="modal-content">
-    <div class="loader"></div>
-    <p style="z-index: 100; color: #000">Chargement...</p>
-  </div>
+<div id="loadingModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="loader"></div>
+        <p id="modalMessage" style="z-index: 100; color: #000">Calcul du temps de scraping...</p>
+        <!-- Affichage du temps écoulé caché initialement -->
+        <div id="timerDisplay" style="font-size: 20px; margin-top: 10px; display: none;">
+            Temps écoulé : <span id="elapsedTime">00:00:00</span>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block footer %}
-    <script src="{{ url_for('static', filename='js/loading_year_check.js') }}"></script>    
+<script src="{{ url_for('static', filename='js/loading_year_check.js') }}"></script>
+<script>
+    function checkAll() {
+        document.querySelectorAll('.form-check-input').forEach(check => check.checked = true);
+    }
+
+    function checkDecade(startYear, endYear) {
+        document.querySelectorAll('.form-check-input').forEach(function(check) {
+            let year = parseInt(check.value, 10); // Convertit la valeur en nombre
+            if (year >= startYear && year <= endYear) {
+                check.checked = true;
+            } else {
+                check.checked = false;
+            }
+        });
+    }
+
+    function uncheckAll() {
+        document.querySelectorAll('.form-check-input').forEach(check => check.checked = false);
+    }
+</script>    
 {% endblock %}

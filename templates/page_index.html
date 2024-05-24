@@ -12,7 +12,7 @@
         .background-image {
             background-image: url("{{ url_for('static', filename='images/icons8-cheval-bizarre-96.png') }}");
             background-size: 20%; /* Couvre toute la zone disponible, vous pouvez ajuster selon les besoins */
-            background-position: right; /* Centre l'image dans le div */
+            background-position: left; /* Centre l'image dans le div */
             background-repeat: no-repeat;
         }
     </style>
@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block content %}
-    <div class="background-image">
+    <div>
         <p>Cette application a pour objet l'aggrégation et la préparation des données pour l'étude des équidé.</p>
 
         <div class="d-flex justify-content-center mt-5">

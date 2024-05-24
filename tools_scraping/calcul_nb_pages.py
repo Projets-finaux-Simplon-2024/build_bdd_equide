@@ -10,7 +10,7 @@ import math
 
 def calcul_nb_pages(driver, annees):
     # Attendre que l'élément devienne cliquable
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 45)
     element = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".card:nth-child(1) > .card-header")))
 
     # Vérifier si la classe 'collapsed' est présente dans l'élément
