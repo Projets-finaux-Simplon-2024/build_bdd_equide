@@ -12,16 +12,6 @@ import pandas as pd
 import os
 #----------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-def wait_for_page_load_and_overlay_disappear(driver, timeout=45):
-    # Wait for the document to be fully loaded
-    WebDriverWait(driver, timeout).until(lambda d: d.execute_script('return document.readyState') == 'complete')
-    
-    handle_alert(driver)
-
-    # Wait for the loading overlay to disappear
-    WebDriverWait(driver, timeout).until(EC.invisibility_of_element_located((By.CLASS_NAME, 'loadingoverlay')))
-
 def handle_alert(driver):
     try:
         alert = Alert(driver)
@@ -29,6 +19,22 @@ def handle_alert(driver):
         alert.accept()  # ou alert.dismiss() si vous voulez fermer l'alerte sans accepter
     except NoAlertPresentException:
         pass
+
+def wait_for_page_load_and_overlay_disappear(driver, timeout=45):
+    # Wait for the document to be fully loaded
+    WebDriverWait(driver, timeout).until(lambda d: d.execute_script('return document.readyState') == 'complete')
+    
+    handle_alert(driver)
+
+    try:
+        # Wait for the loading overlay to disappear
+        WebDriverWait(driver, timeout).until(EC.invisibility_of_element_located((By.CLASS_NAME, 'loadingoverlay')))
+    except TimeoutException:
+        print("Timeout waiting for loading overlay to disappear. Continuing...")
+    except UnexpectedAlertPresentException:
+        handle_alert(driver)
+        # Retrying once more after handling alert
+        WebDriverWait(driver, timeout).until(EC.invisibility_of_element_located((By.CLASS_NAME, 'loadingoverlay')))
 
 
 def scraping_chevaux_infos_generales(driver, nombre_pages, annees):
@@ -39,6 +45,7 @@ def scraping_chevaux_infos_generales(driver, nombre_pages, annees):
     wait = WebDriverWait(driver, 45)
 
     wait_for_page_load_and_overlay_disappear(driver)
+    handle_alert(driver)
 
     # Mise à disposition de 100 réponses par page
     element = wait.until(EC.element_to_be_clickable((By.ID, "resultatParPage")))
@@ -58,6 +65,7 @@ def scraping_chevaux_infos_generales(driver, nombre_pages, annees):
         for i in range(nombre_pages):
             # Assurer que la page est complètement chargée et que le loading overlay est absent
             wait_for_page_load_and_overlay_disappear(driver)
+            handle_alert(driver)
             
             # Extraire les informations avec Selenium
             articles = driver.find_elements(By.TAG_NAME, 'article')
@@ -72,29 +80,40 @@ def scraping_chevaux_infos_generales(driver, nombre_pages, annees):
                     df = pd.concat([df, new_row], ignore_index=True)
 
 
-            try:
-                    wait_for_page_load_and_overlay_disappear(driver)
-
+            success = False
+            attempts = 0
+            while not success and attempts < 3:
+                try:
+                    handle_alert(driver)
 
                     # Localiser le bouton 'Suivant'
                     next_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'li.page-item.next:not(.disabled) a')))
-
+                    
                     # Cliquer sur le bouton 'Suivant' s'il est trouvé
                     next_button.click()
-
+                    
                     # Augmenter le numéro de page
                     pagination += 1
-
+                    
                     # Assurer que la nouvelle page est complètement chargée et que le loading overlay est absent
                     wait_for_page_load_and_overlay_disappear(driver)
                     wait.until(EC.presence_of_element_located((By.TAG_NAME, 'article')))
-
-            except TimeoutException:
-                print("\nFin de la pagination atteinte ou le bouton 'Suivant' n'est pas cliquable.\n")
-                break
+                    
+                    success = True  # Si toutes les étapes réussissent, marquer comme succès
+                except StaleElementReferenceException:
+                    print("StaleElementReferenceException encountered. Retrying...")
+                    attempts += 1
+                except (TimeoutException, NoSuchElementException):
+                    print("\nFin de la pagination atteinte ou le bouton 'Suivant' n'est pas cliquable.\n")
+                    success = True  # Sortir de la boucle while
+                    break
+                except UnexpectedAlertPresentException:
+                    handle_alert(driver)
+                    attempts += 1
 
     except NoSuchElementException as ex:
         print(f"Une erreur est survenue lors de la navigation : {ex}\n")
+
     except TimeoutException as ex:
         print(f"TimeoutException: {ex}\n")
 

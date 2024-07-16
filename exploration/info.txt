@@ -1,0 +1,19 @@
+# Pour print la réunion
+
+```
+print("--------------------------------------------------------------------------------------------------------------------->")
+print(f"id_programme : {id_programme} | date_programmation : {date_programme_fr} | num_reunion : {reunion["num_officiel"]}")
+print(f"code_hippodrome : {reunion["code_hippodrome"]} | libelle_court_hippodrome : {reunion["libelle_court_hippodrome"]} | libelle_long_hippodrome : {reunion["libelle_long_hippodrome"]}")
+print(f"audience : {reunion["audience"]} | nature : {reunion["nature"]} | statut : {reunion["statut"]} | disciplines_mere : {reunion["disciplines_mere"]}")
+print(f"specialites : {reunion["specialites"]} | meteo_nebulosite_code : {reunion["meteo_nebulosite_code"]} | meteo_nebulosite_Libelle_Court : {reunion["meteo_nebulosite_Libelle_Court"]}")
+print(f"meteo_nebulosite_Libelle_Long : {reunion["meteo_nebulosite_Libelle_Long"]} | meteo_temperature : {reunion["meteo_temperature"]} | meteo_force_vent : {reunion["meteo_force_vent"]} | meteo_direction_vent : {reunion["meteo_direction_vent"]}")
+print("---------------------------------------------------------------------------------------------------------------------<")
+```
+
+
+
+# Initialiser les DataFrames
+df = pd.DataFrame(columns=["id_programme", "date_programme"])
+df_reunions = pd.DataFrame(columns=["id_reunion", "id_programme", "num_officiel", "nature", "code_hippodrome", "libelle_court_hippodrome", "libelle_long_hippodrome", "code_pays", "libelle_pays", "audience", "statut", "disciplines_mere", "specialites", "meteo_nebulosite_code", "meteo_nebulosite_Libelle_Court", "meteo_nebulosite_Libelle_Long", "meteo_temperature", "meteo_force_vent", "meteo_direction_vent"])
+df_courses = pd.DataFrame(columns=["id_course","id_reunion","libelle","libelleCourt","heureDepart","distance","distanceUnit","parcours","corde","discipline","specialite","conditionSexe","grandPrixNationalTrot","montantPrix","montantTotalOffert","montantOffert1er","montantOffert2eme","montantOffert3eme","montantOffert4eme","montantOffert5eme","conditions","statut","categorieStatut","dureeCourse","dureeCourseEnMinute","nombreDeclaresPartants","incidents_type","incidents_participants","ordreArrivee"])
+df_participations = pd.DataFrame()

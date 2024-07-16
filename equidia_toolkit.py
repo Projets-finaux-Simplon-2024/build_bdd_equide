@@ -14,7 +14,7 @@ from datetime import datetime
 # Local
 from tools_scraping.recup_annees import recup_annees
 from tools_scraping.calcul_nb_pages import calcul_nb_pages
-from connexions_files.con_ifce import connexion_ifce
+from tools_scraping.con_ifce import connexion_ifce
 from tools_scraping.scraping_chevaux_infos_generales import scraping_chevaux_infos_generales
 
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
