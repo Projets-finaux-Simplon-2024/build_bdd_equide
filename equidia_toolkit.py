@@ -9,6 +9,8 @@ import threading
 import os
 import subprocess
 import sys
+import psycopg2
+from psycopg2 import sql
 from datetime import datetime
 
 # Local
@@ -165,7 +167,122 @@ def scraping_chevaux_bases():
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 
+# |---------------------------------------------------------- PAGE DE CREATION DE BDD ---------------------------------------------------------|
+@app.route("/creation_container", methods=['GET', 'POST'])
+def creation_container():
 
+    if request.method == 'POST':
+
+        action = request.form['action']
+
+        if action == 'retour':
+            return render_template('page_index.html')
+
+        if action == 'supprimer':
+            # Stop and remove the PostgreSQL container
+            stop_result = subprocess.run(["docker", "stop", "container_equide"], capture_output=True, text=True)
+            remove_result = subprocess.run(["docker", "rm", "container_equide"], capture_output=True, text=True)
+            
+            if stop_result.returncode == 0 and remove_result.returncode == 0:
+                message = "La base de données PostgreSQL a été supprimée avec succès."
+            else:
+                message = f"Erreur lors de la suppression de la base de données PostgreSQL : {stop_result.stderr or remove_result.stderr}"
+            
+            return render_template('page_creation_container.html', message=message)
+
+        if action == 'creation':
+            # Check if the container already exists
+            inspect_result = subprocess.run(["docker", "inspect", "bdd_equide"], capture_output=True, text=True)
+            
+            if inspect_result.returncode == 0:
+                # The container already exists
+                error_message = "Un conteneur avec le nom 'bdd_equide' existe déjà."
+                return render_template('page_creation_container.html', error=error_message)
+            else:
+                # Pull the PostgreSQL image from Docker Hub
+                subprocess.run(["docker", "pull", "postgres"])
+                
+                # Run a new PostgreSQL container
+                result = subprocess.run([
+                    "docker", "run", "--name", "container_equide", 
+                    "-e", "POSTGRES_USER=admin", 
+                    "-e", "POSTGRES_PASSWORD=admin", 
+                    "-e", "POSTGRES_DB=bdd_equide", 
+                    "-p", "5434:5432", 
+                    "-d", "postgres"
+                ], capture_output=True, text=True)
+                
+                # Check if the container started successfully
+                if result.returncode == 0:
+                    container_id = result.stdout.strip()
+                    creation_info = {
+                        "container_id": container_id,
+                        "container_name": "container_equide",
+                        "host": "localhost",
+                        "port": "5434",
+                        "user": "admin",
+                        "password": "admin",
+                        "database": "bdd_equide"   
+                    }
+                    return render_template('page_creation_container.html', creation_info=creation_info)
+                else:
+                    error_message = result.stderr
+                    return render_template('page_creation_container.html', error=error_message)
+        
+    return render_template('page_creation_container.html')
+# |--------------------------------------------------------------------------------------------------------------------------------------------|
+
+
+
+# |---------------------------------------------------------- PAGE D'IMPLEMENTATION TABLES ----------------------------------------------------|
+@app.route("/implementation_tables", methods=['GET', 'POST'])
+def implementation_tables():
+    # Check if the container already exists
+    inspect_result = subprocess.run(["docker", "inspect", "container_equide"], capture_output=True, text=True)
+    
+    if inspect_result.returncode != 0:
+        return render_template('page_no_container.html')
+    
+    if request.method == 'POST':
+        action = request.form['action']
+
+        if action == 'retour':
+            return render_template('page_index.html')
+        
+        if action == 'creation':
+            try:
+                # Connect to the PostgreSQL database
+                conn = psycopg2.connect(
+                    dbname="bdd_equide",  # Database name
+                    user="admin",  # Database user
+                    password="admin",  # Database password
+                    host="localhost",  # Database host
+                    port="5434"  # Database port
+                )
+                cur = conn.cursor()
+
+                # Lire le fichier SQL
+                with open('diagram_equide.sql', 'r') as file:
+                    sql = file.read()
+
+                # Exécuter les instructions SQL
+                cur.execute(sql)
+
+                # Commit changes
+                conn.commit()
+
+                # Close communication with the database
+                cur.close()
+                conn.close()
+
+                creation_info = "Les tables ont été créées avec succès."
+                return render_template('page_implementation_tables.html', creation_info=creation_info)
+
+            except (Exception, psycopg2.DatabaseError) as error:
+                return render_template('page_implementation_tables.html', error=str(error))
+    
+    return render_template('page_implementation_tables.html')
+# |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 

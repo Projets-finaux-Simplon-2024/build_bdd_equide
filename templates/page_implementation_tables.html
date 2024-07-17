@@ -1,0 +1,133 @@
+{% extends "core.html" %} 
+
+{% block css %}
+    <style>
+        .result-console {
+            width: 100%;
+            height: 10vw; /* Ajustez la hauteur selon vos besoins */
+            border: 1px solid #7e7e7e;
+            border-radius: 10px;
+            margin: 10px;
+            padding: 10px;
+            overflow-y: auto; /* Ajoute une barre de défilement si le contenu dépasse la hauteur */
+            background-color: #f9f9f9; /* Optionnel : couleur de fond pour un meilleur contraste */
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 30%;
+            text-align: center;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+{% endblock %} 
+
+{% block header %}
+    <h1>Implémentation des tables</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2>Création des tables tel que</h2>
+    <div class="row">
+        <img src="{{ url_for('static', filename='images/diagram_equide.png') }}" width="100%">
+    </div>
+    <div class="row">
+        <div class="result-console">
+            {% if creation_info %}
+                <div class="alert alert-success">
+                    <p> {{ creation_info }}</p>
+                </div>
+            {% endif %}
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-6 text-left">
+                <button type="submit" class="btn btn-danger" name="action" value="retour">Retour</button>
+            </div>
+            <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary" name="action" value="creation" onclick="startTimer(); showModal();">Création</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal -->
+<div id="loadingModal" class="modal">
+    <div class="modal-content">
+        <div class="loader"></div>
+        <p id="modalMessage" style="z-index: 100; color: #000">Création des tables en cours...</p>
+        <!-- Affichage du temps écoulé caché initialement -->
+        <div id="timerDisplay" style="font-size: 20px; margin-top: 10px; display: none;">
+            Temps écoulé : <span id="elapsedTime">00:00:00</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+<script>
+    let startTime;
+
+    function showModal() {
+        document.getElementById('loadingModal').style.display = 'block';
+    }
+
+    function hideModal() {
+        document.getElementById('loadingModal').style.display = 'none';
+    }
+
+    function startTimer() {
+        startTime = new Date(); // Heure de départ
+        document.getElementById('timerDisplay').style.display = 'block';
+        document.getElementById('modalMessage').textContent = 'Création des tables en cours...'; // Change le message de la modal
+        updateTimer();
+    }
+
+    function updateTimer() {
+        const now = new Date();
+        const elapsed = now - startTime; // Temps écoulé en millisecondes
+        const hours = Math.floor(elapsed / 3600000);
+        const minutes = Math.floor((elapsed % 3600000) / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+
+        document.getElementById('elapsedTime').textContent = 
+            `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        requestAnimationFrame(updateTimer); // Mettre à jour le timer à chaque frame
+    }
+</script>
+{% endblock %}
