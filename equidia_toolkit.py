@@ -29,6 +29,12 @@ list_annees = None
 # |---------------------------------------------------------- PAGE ACCUEIL --------------------------------------------------------------------|
 @app.route("/")
 def index():
+    # Check if the container already exists
+    inspect_result = subprocess.run(["docker", "inspect", "container_equide"], capture_output=True, text=True)
+    
+    if inspect_result.returncode == 0:
+        subprocess.run(["docker", "start", "container_equide"], capture_output=True, text=True)
+    
     return render_template('page_index.html')
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
@@ -167,7 +173,7 @@ def scraping_chevaux_bases():
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 
-# |---------------------------------------------------------- PAGE DE CREATION DE BDD ---------------------------------------------------------|
+# |---------------------------------------------------------- PAGE DE CREATION DU CONTAINER POSTGRES ------------------------------------------|
 @app.route("/creation_container", methods=['GET', 'POST'])
 def creation_container():
 
@@ -192,11 +198,11 @@ def creation_container():
 
         if action == 'creation':
             # Check if the container already exists
-            inspect_result = subprocess.run(["docker", "inspect", "bdd_equide"], capture_output=True, text=True)
+            inspect_result = subprocess.run(["docker", "inspect", "container_equide"], capture_output=True, text=True)
             
             if inspect_result.returncode == 0:
                 # The container already exists
-                error_message = "Un conteneur avec le nom 'bdd_equide' existe déjà."
+                error_message = "Un conteneur avec le nom 'container_equide' existe déjà."
                 return render_template('page_creation_container.html', error=error_message)
             else:
                 # Pull the PostgreSQL image from Docker Hub
@@ -237,11 +243,15 @@ def creation_container():
 # |---------------------------------------------------------- PAGE D'IMPLEMENTATION TABLES ----------------------------------------------------|
 @app.route("/implementation_tables", methods=['GET', 'POST'])
 def implementation_tables():
-    # Check if the container already exists
-    inspect_result = subprocess.run(["docker", "inspect", "container_equide"], capture_output=True, text=True)
+    # Check if the container is running
+    inspect_result = subprocess.run(["docker", "inspect", "--format='{{.State.Running}}'", "container_equide"], capture_output=True, text=True)
     
     if inspect_result.returncode != 0:
+        # If the container does not exist
         return render_template('page_no_container.html')
+    elif "false" in inspect_result.stdout:
+        # If the container is not running
+        return render_template('page_container_stopped.html')
     
     if request.method == 'POST':
         action = request.form['action']
@@ -282,6 +292,41 @@ def implementation_tables():
                 return render_template('page_implementation_tables.html', error=str(error))
     
     return render_template('page_implementation_tables.html')
+# |--------------------------------------------------------------------------------------------------------------------------------------------|
+
+
+
+# |---------------------------------------------------------- PAGE REMPLISSAGE TABLE CHEVAUX TF  ----------------------------------------------|
+@app.route("/remplissage_table_chevaux_tf", methods=['GET', 'POST'])
+def remplissage_table_chevaux_tf():
+    # Check if the container is running
+    inspect_result = subprocess.run(["docker", "inspect", "--format='{{.State.Running}}'", "container_equide"], capture_output=True, text=True)
+    
+    if inspect_result.returncode != 0:
+        # If the container does not exist
+        return render_template('page_no_container.html')
+    elif "false" in inspect_result.stdout:
+        # If the container is not running
+        return render_template('page_container_stopped.html')
+    
+    return render_template('page_remplissage_table_chevaux_tf.html')
+# |--------------------------------------------------------------------------------------------------------------------------------------------|
+
+
+# |---------------------------------------------------------- PAGE REMPLISSAGES RESULTATS PMU -------------------------------------------------|
+@app.route("/remplissage_tables_resultat_pmu", methods=['GET', 'POST'])
+def remplissage_tables_resultat_pmu():
+    # Check if the container is running
+    inspect_result = subprocess.run(["docker", "inspect", "--format='{{.State.Running}}'", "container_equide"], capture_output=True, text=True)
+    
+    if inspect_result.returncode != 0:
+        # If the container does not exist
+        return render_template('page_no_container.html')
+    elif "false" in inspect_result.stdout:
+        # If the container is not running
+        return render_template('page_container_stopped.html')
+    
+    return render_template('remplissage_tables_resultat_pmu.html')
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 

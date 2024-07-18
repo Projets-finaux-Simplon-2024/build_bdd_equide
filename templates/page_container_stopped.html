@@ -1,0 +1,39 @@
+{% extends "core.html" %} 
+
+{% block css %}
+    <style>
+        .full-height {
+            height: 100vh; /* Assure que le conteneur prend toute la hauteur de la fenêtre */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column; /* Centrer les éléments verticalement */
+        }
+    </style>
+{% endblock %} 
+
+{% block header %}
+    <h1>Un problème est survenu</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid full-height">
+    <div class="row justify-content-center">
+        <h2>Le container est éteint !</h2>
+    </div>
+    <div class="row justify-content-center">
+        <div class="text-center">
+            <img src="{{ url_for('static', filename='images/gps-disconnected.png') }}" height="75" style="margin: 10%;">
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="text-left">
+            <a href="/" id="return-button"><button class="btn btn-danger">Retour</button></a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+
+{% endblock %}
