@@ -10,6 +10,9 @@ import os
 import subprocess
 import sys
 import psycopg2
+import pandas as pd
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 from psycopg2 import sql
 from datetime import datetime
 
@@ -18,6 +21,9 @@ from tools_scraping.recup_annees import recup_annees
 from tools_scraping.calcul_nb_pages import calcul_nb_pages
 from tools_scraping.con_ifce import connexion_ifce
 from tools_scraping.scraping_chevaux_infos_generales import scraping_chevaux_infos_generales
+from tools_api.calls_api import call_api
+from tools_api.delete_tables_pmu import delete_tables_pmu
+from tools_api.tables_pleines import tables_pleines
 
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
@@ -299,6 +305,8 @@ def implementation_tables():
 # |---------------------------------------------------------- PAGE REMPLISSAGE TABLE CHEVAUX TF  ----------------------------------------------|
 @app.route("/remplissage_table_chevaux_tf", methods=['GET', 'POST'])
 def remplissage_table_chevaux_tf():
+    fichiers_uploades = []
+
     # Check if the container is running
     inspect_result = subprocess.run(["docker", "inspect", "--format='{{.State.Running}}'", "container_equide"], capture_output=True, text=True)
     
@@ -309,7 +317,94 @@ def remplissage_table_chevaux_tf():
         # If the container is not running
         return render_template('page_container_stopped.html')
     
-    return render_template('page_remplissage_table_chevaux_tf.html')
+    if request.method == 'POST':
+        action = request.form['action']
+
+        if action == 'retour':
+            return render_template('page_index.html')
+        
+        if action == 'remplissage':
+            # Connexion à la base de données avec le port spécifié
+            engine = create_engine('postgresql://admin:admin@localhost:5434/bdd_equide')
+            Session = sessionmaker(bind=engine)
+            session = Session()
+
+            # Mapping des colonnes du CSV aux colonnes de la table
+            column_mapping = {
+                'Nom': 'nom_tf',
+                'Sexe': 'sexe_tf',
+                'Couleur': 'couleur_tf',
+                'Année': 'annee_naissance_tf',
+                'Parent 1': 'pere_tf',
+                'Parent 2': 'mere_tf',
+                'Date de décès': 'date_decee_tf',
+                'Naisseur': 'naisseur_tf',
+                'Lien': 'lien_ifce_tf'
+            }
+
+            # Définir les longueurs maximales pour chaque colonne
+            column_max_lengths = {
+                'nom_tf': 50,
+                'sexe_tf': 10,
+                'couleur_tf': 50,
+                'pere_tf': 50,
+                'mere_tf': 50,
+                'naisseur_tf': 100,
+                'lien_ifce_tf': 150
+            }
+            
+            # Chemin du dossier contenant les fichiers CSV
+            dossier_resultats = './resultats'
+
+            def truncate_column_values(df, column_max_lengths):
+                """Truncate column values based on the specified maximum lengths."""
+                for col, max_length in column_max_lengths.items():
+                    df[col] = df[col].apply(lambda x: x[:max_length] if isinstance(x, str) else x)
+                return df
+
+            def entry_exists(nom_tf, session):
+                """Check if an entry with the given nom_tf already exists in the database."""
+                result = session.execute(text("SELECT 1 FROM chevaux_trotteur_francais WHERE nom_tf = :nom_tf"), {'nom_tf': nom_tf}).fetchone()
+                return result is not None
+
+            # Parcourir tous les fichiers CSV du dossier
+            for fichier in os.listdir(dossier_resultats):
+                if fichier.endswith('.csv'):
+                    chemin_fichier = os.path.join(dossier_resultats, fichier)
+                    try:
+                        # Lire le fichier CSV
+                        df = pd.read_csv(chemin_fichier)
+                        
+                        # Renommer les colonnes selon le mapping
+                        df = df.rename(columns=column_mapping)
+                        
+                        # Garder seulement les colonnes nécessaires pour la table
+                        df = df[list(column_mapping.values())]
+                        
+                        # Remplacer les valeurs "Non renseigné" dans la colonne 'date_decee_tf' par des valeurs NaN
+                        df['date_decee_tf'] = df['date_decee_tf'].replace('Non renseigné', pd.NA)
+                        
+                        # Convertir la colonne 'date_decee_tf' en type datetime avec dayfirst=True
+                        df['date_decee_tf'] = pd.to_datetime(df['date_decee_tf'], errors='coerce', dayfirst=True)
+                        
+                        # Tronquer les valeurs des colonnes selon les longueurs maximales
+                        df = truncate_column_values(df, column_max_lengths)
+                        
+                        # Insérer les données dans la table chevaux_trotteur_francais, en vérifiant les doublons
+                        for index, row in df.iterrows():
+                            if not entry_exists(row['nom_tf'], session):
+                                row.to_frame().T.to_sql('chevaux_trotteur_francais', engine, if_exists='append', index=False)
+                        
+                        # Ajouter le nom du fichier à la liste des fichiers uploadés
+                        fichiers_uploades.append(fichier)
+                    except Exception as e:
+                        # Gérer les erreurs d'importation ici
+                        print(f"Erreur lors de l'importation du fichier {fichier}: {e}")
+                    finally:
+                        session.close()
+    
+    # Rendre la page avec les fichiers uploadés
+    return render_template('page_remplissage_chevaux_tf.html', fichiers_uploades=fichiers_uploades)
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 
@@ -326,7 +421,24 @@ def remplissage_tables_resultat_pmu():
         # If the container is not running
         return render_template('page_container_stopped.html')
     
-    return render_template('remplissage_tables_resultat_pmu.html')
+    message = None
+
+    if request.method == 'POST':
+        action = request.form['action']
+
+        if action == 'retour':
+            return render_template('page_index.html')
+        
+        if action == 'remplissage':
+            if tables_pleines():
+                message = "Les tables doivent être purgées pour éviter les bugs."
+            else:
+                message = call_api()
+
+        if action == 'supprimer':
+            message = delete_tables_pmu()
+    
+    return render_template('page_remplissage_tables_resultat_pmu.html', message=message)
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
 
 

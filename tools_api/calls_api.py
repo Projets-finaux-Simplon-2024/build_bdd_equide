@@ -1,97 +1,254 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
-# Initialiser les DataFrames
-df_programmes = pd.DataFrame(columns=["id_programme", "date_programme"])
-df_reunions = pd.DataFrame(columns=["id_reunion", "id_programme", "num_officiel", "nature", "code_hippodrome", "libelle_court_hippodrome", "libelle_long_hippodrome", "code_pays", "libelle_pays", "audience", "statut", "disciplines_mere", "specialites", "meteo_nebulosite_code", "meteo_nebulosite_Libelle_Court", "meteo_nebulosite_Libelle_Long", "meteo_temperature", "meteo_force_vent", "meteo_direction_vent"])
-df_courses = pd.DataFrame(columns=["id_course", "id_reunion", "num_course", "nom_course", "distance", "allocation"])
+def call_api():
 
-# Date du premier enregistrement 19-02-2013
-# Nombre d'enregistrements = 4161 (environ 11 ans)
-id_programme = 19022013
+    # Connexion à la base de données avec SQLAlchemy
+    engine = create_engine('postgresql://admin:admin@localhost:5434/bdd_equide')
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-# Obtenir la date d'aujourd'hui au format JJMMYYYY
-# date_fin = datetime.now().strftime("%d%m%Y")
+    # Initialiser les DataFrames
+    df_programmes = pd.DataFrame()
+    df_reunions = pd.DataFrame()
+    df_courses = pd.DataFrame()
+    df_participations = pd.DataFrame()
 
-# URL avec la date de début
-url = f"https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/{id_programme}"
+    id_course = 0
+    id_reunion = 0
+    id_participation = 0
 
-# Récupération du Json
-response = requests.get(url)
+    # Date du premier enregistrement 19-02-2013
+    # id_programme = 19022013
 
-if response.status_code == 200:
-    json_data = response.json()
+    # Date du premier enregistrement 19-02-2013
+    start_date = datetime.strptime("19022013", "%d%m%Y")
+    end_date = datetime.strptime("01032013", "%d%m%Y")
+    # end_date = datetime.now()
 
-    # Extraire les informations du programme
-    date_programme_timestamp = json_data["programme"]["date"]//1000
-    date_programme = datetime.fromtimestamp(date_programme_timestamp).date()
+    current_date = start_date
 
-     # Format personnalisé de la date en français
-    date_programme_fr = date_programme.strftime("%d-%m-%Y")
+    while current_date <= end_date:
+        id_programme = current_date.strftime("%d%m%Y")
 
-    # Afficher les informations du programme
-    print(f"Id du programme : {id_programme} | Date du programme : {date_programme_fr}")
+        # URL avec la date de début
+        url = f"https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/{id_programme}"
 
-    # Ajouter les informations du programme au DataFrame
-    df_programmes = pd.concat([df_programmes, pd.DataFrame([{"id_programme": id_programme, "date_programme": date_programme_fr}])], ignore_index=True)
+        # Récupération du Json
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            json_data = response.json()
+
+            #------------------------------------------------------------------- Construction de la table programme -------------------------------------------------------------------
+            # Extraire les informations du programme
+            date_programme_timestamp = json_data["programme"]["date"] // 1000
+            date_programme = datetime.fromtimestamp(date_programme_timestamp).date()
+
+            # Format personnalisé de la date en français
+            date_programme_fr = date_programme.strftime("%Y-%m-%d")
+
+            # Afficher les informations du programme
+            # print(f"Id du programme : {id_programme} | Date du programme : {date_programme_fr}")
+            df_programmes = pd.concat([df_programmes, pd.DataFrame([{"id_programme": id_programme, "date_programme": date_programme_fr}])], ignore_index=True)
+            #------------------------------------------------------------------- Construction de la table programme -------------------------------------------------------------------
+
+            #------------------------------------------------------------------- Construction de la table reunions --------------------------------------------------------------------
+
+            for reunion in json_data["programme"]["reunions"]:
+                # id_reunion est date + numero de la reunion exemple 19022013R1
+                id_reunion += 1
+
+                discipline_mere = ', '.join(reunion.get("disciplinesMere", []))
+                specialites = reunion.get("specialites", [])
+
+                # Assurez-vous d'avoir suffisamment d'éléments, sinon remplissez avec None
+                specialites_padded = specialites + [None] * (4 - len(specialites))
+
+                reunion_data = {
+                    "id_reunion": id_reunion,
+                    "id_programme": id_programme,
+                    "num_officiel": reunion.get("numOfficiel"),
+                    "nature": reunion.get("nature"),
+                    "code_hippodrome": reunion.get("hippodrome", {}).get("code"),
+                    "libelle_court_hippodrome": reunion.get("hippodrome", {}).get("libelleCourt"),
+                    "libelle_long_hippodrome": reunion.get("hippodrome", {}).get("libelleLong"),
+                    "code_pays": reunion["pays"].get("code"),
+                    "libelle_pays": reunion["pays"].get("libelle"),
+                    "audience": reunion.get("audience"),
+                    "statut": reunion.get("statut"),
+                    "disciplines_mere": discipline_mere,
+                    "specialite_1": specialites_padded[0],
+                    "specialite_2": specialites_padded[1],
+                    "specialite_3": specialites_padded[2],
+                    "specialite_4": specialites_padded[3],
+                    "meteo_nebulosite_code": reunion.get("meteo", {}).get("nebulositeCode"),
+                    "meteo_nebulosite_Libelle_Court": reunion.get("meteo", {}).get("nebulositeLibelleCourt"),
+                    "meteo_nebulosite_Libelle_Long": reunion.get("meteo", {}).get("nebulositeLibelleLong"),
+                    "meteo_temperature": reunion.get("meteo", {}).get("temperature"),
+                    "meteo_force_vent": reunion.get("meteo", {}).get("forceVent"),
+                    "meteo_direction_vent": reunion.get("meteo", {}).get("directionVent")
+                }
+
+                df_reunions = pd.concat([df_reunions, pd.DataFrame([reunion_data])], ignore_index=True)
+                #------------------------------------------------------------------- Construction de la table reunions --------------------------------------------------------------------
 
 
-    # Extraire les informations des réunions
-    reunions_data = []
-    for reunion in json_data["programme"]["reunions"]:
-        # id_reunion est date + numeroe de la reunion exemple 19022013R1
-        id_reunion = f"{id_programme}R{reunion.get('numOfficiel')}" 
-        reunion_data = {
-            "num_officiel": reunion.get("numOfficiel"),
-            "nature": reunion.get("nature"),
-            "code_hippodrome": reunion["hippodrome"].get("code"),
-            "libelle_court_hippodrome": reunion["hippodrome"].get("libelleCourt"),
-            "libelle_long_hippodrome": reunion["hippodrome"].get("libelleLong"),
-            "code_pays": reunion["pays"].get("code"),
-            "libelle_pays": reunion["pays"].get("libelle"),
-            "audience": reunion.get("audience"),
-            "statut": reunion.get("statut"),
-            "disciplines_mere": reunion.get("disciplinesMere"),
-            "specialites": reunion.get("specialites"),
-            "meteo_nebulosite_code": reunion.get("meteo", {}).get("nebulositeCode"),
-            "meteo_nebulosite_Libelle_Court": reunion.get("meteo", {}).get("nebulositeLibelleCourt"),
-            "meteo_nebulosite_Libelle_Long": reunion.get("meteo", {}).get("nebulositeLibelleLong"),
-            "meteo_temperature": reunion.get("meteo", {}).get("temperature"),
-            "meteo_force_vent": reunion.get("meteo", {}).get("forceVent"),
-            "meteo_direction_vent": reunion.get("meteo", {}).get("directionVent")
-        }
-        reunions_data.append(reunion_data)
-        df_reunions = pd.concat([df_reunions, pd.DataFrame([reunion_data])], ignore_index=True)
 
 
-    # Afficher les informations des réunions
-    for reunion in reunions_data:
-        print("--------------------------------------------------------------------------------------------------------------------->")
-        print(f"id_programme : {id_programme} | date_programmation : {date_programme_fr} | num_reunion : {reunion["num_officiel"]}")
-        print(f"code_hippodrome : {reunion["code_hippodrome"]} | libelle_court_hippodrome : {reunion["libelle_court_hippodrome"]} | libelle_long_hippodrome : {reunion["libelle_long_hippodrome"]}")
-        print(f"audience : {reunion["audience"]} | nature : {reunion["nature"]} | statut : {reunion["statut"]} | disciplines_mere : {reunion["disciplines_mere"]}")
-        print(f"specialites : {reunion["specialites"]} | meteo_nebulosite_code : {reunion["meteo_nebulosite_code"]} | meteo_nebulosite_Libelle_Court : {reunion["meteo_nebulosite_Libelle_Court"]}")
-        print(f"meteo_nebulosite_Libelle_Long : {reunion["meteo_nebulosite_Libelle_Long"]} | meteo_temperature : {reunion["meteo_temperature"]} | meteo_force_vent : {reunion["meteo_force_vent"]} | meteo_direction_vent : {reunion["meteo_direction_vent"]}")
-        print("---------------------------------------------------------------------------------------------------------------------<")
+                #------------------------------------------------------------------- Construction de la table courses --------------------------------------------------------------------
+                num_reunion = reunion_data['num_officiel']
+                url_courses = f"https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/{id_programme}/R{num_reunion}"
 
-        # URL pour les détails des courses de la réunion
-        num_reunion = reunion['num_officiel']
-        url_courses = f"https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/{id_programme}/R{num_reunion}"
-            
-        # Récupérer les données JSON pour les courses
-        response_courses = requests.get(url_courses)
-        
-        if response_courses.status_code == 200:
-            courses_data = response_courses.json()
-            # Traitez les données des courses ici
-            print(f"Détails des courses pour la réunion {num_reunion} : {courses_data}")
+                # Récupération du Json
+                response_courses = requests.get(url_courses)
+
+                if response_courses.status_code == 200:
+                    json_data_courses = response_courses.json()
+                
+
+                    for course in json_data_courses["courses"]:
+                        id_course += 1
+                        heureDepart_timestamp = course.get("heureDepart", 0) // 1000
+
+                        # Gérer les timestamps négatifs
+                        if heureDepart_timestamp < 0:
+                            heureDepart = None
+                        else:
+                            heureDepart = datetime.fromtimestamp(heureDepart_timestamp).time()
+
+                        # Convertir dureeCourse de millisecondes à un format lisible
+                        duree_course_ms = course.get("dureeCourse", 0)
+                        duree_course_minutes, duree_course_seconds = divmod(duree_course_ms // 1000, 60)
+                        duree_course_formatted = f"{duree_course_minutes}m {duree_course_seconds}s"
+
+                        # Extraction des incidents
+                        incidents_list = course.get("incidents", [])
+                        incidents_type = [incident.get("type") for incident in incidents_list] if isinstance(incidents_list, list) else []
+                        incidents_participants = [incident.get("numeroParticipants") for incident in incidents_list] if isinstance(incidents_list, list) else []
+
+                        # Conversion des listes en chaînes de caractères
+                        incidents_type_str = ' | '.join(incidents_type)
+                        incidents_participants_str = ' | '.join([', '.join(map(str, participants)) for participants in incidents_participants])
+
+                        specialites = reunion.get("specialites", [None, None])  # Deux spécialités ou None
+                        specialite_1 = specialites[0] if len(specialites) > 0 else None
+                        specialite_2 = specialites[1] if len(specialites) > 1 else None
+
+                        # Récupération des ordres d'arrivée
+                        ordre_arrivee = course.get("ordreArrivee", [])
+                        ordre_arrivee_padded = [ordre[0] if isinstance(ordre, list) else ordre for ordre in (ordre_arrivee + [None] * (5 - len(ordre_arrivee)))]
+
+                        course_data = {
+                            "id_course": id_course,
+                            "id_reunion": id_reunion,
+                            "libelle": course.get("libelle"),
+                            "libelle_court": course.get("libelleCourt"),
+                            "heure_depart": heureDepart,
+                            "parcours": course.get("parcours"),
+                            "distance": course.get("distance"),
+                            "distance_unit": course.get("distanceUnit"),
+                            "corde": course.get("corde"),
+                            "discipline": course.get("discipline"),
+                            "specialite_1": specialite_1,
+                            "specialite_2": specialite_2,
+                            "condition_sexe": course.get("conditionSexe"),
+                            "conditions": course.get("conditions"),
+                            "statut": course.get("statut"),
+                            "categorie_statut": course.get("categorieStatut"),
+                            "duree_course": course.get("dureeCourse"),
+                            "duree_course_en_minute":duree_course_formatted,
+                            "montant_prix": course.get("montantPrix"),
+                            "grand_prix_national_trot": course.get("grandPrixNationalTrot"),
+                            "nombre_declares_partants": course.get("nombreDeclaresPartants"),
+                            "montant_total_offert": course.get("montantTotalOffert"),
+                            "premier": ordre_arrivee_padded[0],
+                            "montant_offert_1er": course.get("montantOffert1er"),
+                            "deuxieme": ordre_arrivee_padded[1],
+                            "montant_offert_2eme": course.get("montantOffert2eme"),
+                            "troisieme": ordre_arrivee_padded[2],
+                            "montant_offert_3eme": course.get("montantOffert3eme"),
+                            "quatrieme": ordre_arrivee_padded[3],
+                            "montant_offert_4eme": course.get("montantOffert4eme"),
+                            "cinquieme": ordre_arrivee_padded[4],
+                            "montant_offert_5eme": course.get("montantOffert5eme"),
+                            "incidents_type": incidents_type_str,
+                            "incidents_participants": incidents_participants_str,
+                        }
+                        df_courses = pd.concat([df_courses, pd.DataFrame([course_data])], ignore_index=True)
+                        #------------------------------------------------------------------- Construction de la table courses --------------------------------------------------------------------
+
+
+                        #------------------------------------------------------------------- Construction de la table participations -------------------------------------------------------------
+                        num_course = course.get("numOrdre")
+                        url_participants = f"https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/{id_programme}/R{num_reunion}/C{num_course}/participants"
+
+                        # Récupération du Json
+                        response_participants = requests.get(url_participants)
+
+                        if response_participants.status_code == 200:
+                            json_data_participants = response_participants.json()
+
+                            for participant in json_data_participants["participants"]:
+                                id_participation += 1
+
+                                # Convertir dureeCourse de millisecondes à un format lisible
+                                temps_obtenu_ms = participant.get("tempsObtenu", 0)
+                                temps_obtenu_minutes, temps_obtenu_seconds = divmod(temps_obtenu_ms // 1000, 60)
+                                temps_obtenu_formatted = f"{temps_obtenu_minutes}m {temps_obtenu_seconds}s"
+
+                                participation_data = {
+                                    "id_participation": id_participation,
+                                    "id_course": id_course,
+                                    "nom": participant.get("nom"),
+                                    "numero_cheval": participant.get("numPmu"),
+                                    "age": participant.get("age"),
+                                    "sexe": participant.get("sexe"),
+                                    "race": participant.get("race"),
+                                    "statut": participant.get("statut"),
+                                    "proprietaire": participant.get("proprietaire"),
+                                    "entraineur": participant.get("entraineur"),
+                                    "driver": participant.get("driver"),
+                                    "driverChange": participant.get("driverChange"),
+                                    "code_robe": participant.get("robe", {}).get("code"),
+                                    "libelleCourt_robe": participant.get("robe", {}).get("libelleCourt"),
+                                    "libelleLong_robe": participant.get("robe", {}).get("libelleLong"),
+                                    "nombre_courses": participant.get("nombreCourses"),
+                                    "nombre_victoires": participant.get("nombreVictoires"),
+                                    "nombre_places": participant.get("nombrePlaces"),
+                                    "nom_pere": participant.get("nomPere"),
+                                    "nom_mere": participant.get("nomMere"),
+                                    "ordre_arrivee": participant.get("ordreArrivee"),
+                                    "jument_pleine": participant.get("jumentPleine"),
+                                    "engagement": participant.get("engagement"),
+                                    "supplement": participant.get("supplement"),
+                                    "handicap_distance": participant.get("handicapDistance"),
+                                    "poids_condition_monte_change": participant.get("poidsConditionMonteChange"),
+                                    "temps_obtenu": participant.get("tempsObtenu"),
+                                    "temps_obtenu_en_minute": temps_obtenu_formatted,
+                                    "reduction_kilometrique": participant.get("reductionKilometrique"),
+                                    "allure": participant.get("allure"),
+                                }
+                                df_participations = pd.concat([df_participations, pd.DataFrame([participation_data])], ignore_index=True)
+
+
+                        #------------------------------------------------------------------- Construction de la table participations -------------------------------------------------------------
+
         else:
-            print(f"Échec de la récupération des données des courses pour la réunion {num_reunion}, code de statut : {response_courses.status_code}")
-else:
-    print(f"Échec de la récupération des données, code de statut : {response.status_code}")
+            print(f"Échec de la récupération des données, code de statut : {response.status_code}")
 
-# Afficher les DataFrames
-print(df_programmes.head())
-print(df_reunions.head())
+        # Passer à la date suivante
+        current_date += timedelta(days=1)
+
+    df_programmes.to_sql('programmes_des_courses', engine, if_exists='append', index=False)
+    df_reunions.to_sql('reunion', engine, if_exists='append', index=False)
+    #df_courses.to_sql('courses', engine, if_exists='append', index=False)
+
+    session.close()
+    message = "Remplissage terminé"
+
+    return message
