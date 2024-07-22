@@ -1,7 +1,6 @@
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine, inspect, text
 
 def tables_pleines():
-
     # Connexion à la base de données
     engine = create_engine('postgresql://admin:admin@localhost:5434/bdd_equide')
 
@@ -10,7 +9,7 @@ def tables_pleines():
 
     with engine.connect() as connection:
         for table_name in tables:
-            count_query = f"SELECT COUNT(*) FROM {table_name}"
+            count_query = text(f"SELECT COUNT(*) FROM {table_name}")
             result = connection.execute(count_query)
             count = result.fetchone()[0]
             if count > 0:

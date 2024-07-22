@@ -191,6 +191,11 @@ def creation_container():
             return render_template('page_index.html')
 
         if action == 'supprimer':
+
+            # Supprimer le fichier last_run_date.txt s'il existe
+            if os.path.exists('last_run_date.txt'):
+                os.remove('last_run_date.txt')
+
             # Stop and remove the PostgreSQL container
             stop_result = subprocess.run(["docker", "stop", "container_equide"], capture_output=True, text=True)
             remove_result = subprocess.run(["docker", "rm", "container_equide"], capture_output=True, text=True)
@@ -430,10 +435,12 @@ def remplissage_tables_resultat_pmu():
             return render_template('page_index.html')
         
         if action == 'remplissage':
-            if tables_pleines():
-                message = "Les tables doivent être purgées pour éviter les bugs."
-            else:
-                message = call_api()
+
+            #if tables_pleines():
+            #    message = "Les tables doivent être purgées pour éviter les bugs."
+            #else:
+            #    message = call_api()
+            message = call_api()
 
         if action == 'supprimer':
             message = delete_tables_pmu()

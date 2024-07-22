@@ -1,16 +1,34 @@
+import os
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+LAST_RUN_FILE = 'last_run_date.txt'
+
+def read_last_run_date():
+    if os.path.exists(LAST_RUN_FILE):
+        with open(LAST_RUN_FILE, 'r') as file:
+            return file.read().strip()
+    return '19022013'
+
+def write_last_run_date(date_str):
+    with open(LAST_RUN_FILE, 'w') as file:
+        file.write(date_str)
+
+def check_date_exists(engine, date_str):
+    query = text("SELECT EXISTS (SELECT 1 FROM programmes_des_courses WHERE date_programme = :date_programme)")
+    with engine.connect() as conn:
+        result = conn.execute(query, {'date_programme': date_str}).scalar()
+    return result
 
 def call_api():
 
     # Connexion à la base de données avec SQLAlchemy
     engine = create_engine('postgresql://admin:admin@localhost:5434/bdd_equide')
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    session_maked = sessionmaker(bind=engine)
+    session = session_maked()
 
     # Initialiser les DataFrames
     df_programmes = pd.DataFrame()
@@ -18,17 +36,16 @@ def call_api():
     df_courses = pd.DataFrame()
     df_participations = pd.DataFrame()
 
-    id_course = 0
-    id_reunion = 0
-    id_participation = 0
+    # Lire la date de début à partir du fichier ou définir une date par défaut (Date du premier enregistrement 19-02-2013)
+    start_date_str = read_last_run_date()
+    start_date = datetime.strptime(start_date_str, "%d%m%Y")
 
-    # Date du premier enregistrement 19-02-2013
-    # id_programme = 19022013
-
-    # Date du premier enregistrement 19-02-2013
-    start_date = datetime.strptime("19022013", "%d%m%Y")
-    end_date = datetime.strptime("01032013", "%d%m%Y")
-    # end_date = datetime.now()
+    # Vérifier si la date existe déjà
+    if check_date_exists(engine, start_date):
+        print(f"Les données pour la date {start_date} existent déjà, passage à la date suivante.")
+        start_date += timedelta(days=1)
+    
+    end_date = datetime.now()
 
     current_date = start_date
 
@@ -53,16 +70,13 @@ def call_api():
             date_programme_fr = date_programme.strftime("%Y-%m-%d")
 
             # Afficher les informations du programme
-            # print(f"Id du programme : {id_programme} | Date du programme : {date_programme_fr}")
             df_programmes = pd.concat([df_programmes, pd.DataFrame([{"id_programme": id_programme, "date_programme": date_programme_fr}])], ignore_index=True)
             #------------------------------------------------------------------- Construction de la table programme -------------------------------------------------------------------
 
             #------------------------------------------------------------------- Construction de la table reunions --------------------------------------------------------------------
 
             for reunion in json_data["programme"]["reunions"]:
-                # id_reunion est date + numero de la reunion exemple 19022013R1
-                id_reunion += 1
-
+                
                 discipline_mere = ', '.join(reunion.get("disciplinesMere", []))
                 specialites = reunion.get("specialites", [])
 
@@ -70,7 +84,8 @@ def call_api():
                 specialites_padded = specialites + [None] * (4 - len(specialites))
 
                 reunion_data = {
-                    "id_reunion": id_reunion,
+                    # id_reunion est date + numero de la reunion exemple 19022013R1
+                    "id_reunion": f"{id_programme}R{reunion.get('numOfficiel')}",
                     "id_programme": id_programme,
                     "num_officiel": reunion.get("numOfficiel"),
                     "nature": reunion.get("nature"),
@@ -112,14 +127,14 @@ def call_api():
                 
 
                     for course in json_data_courses["courses"]:
-                        id_course += 1
-                        heureDepart_timestamp = course.get("heureDepart", 0) // 1000
+
+                        heure_depart_timestamp = course.get("heureDepart", 0) // 1000
 
                         # Gérer les timestamps négatifs
-                        if heureDepart_timestamp < 0:
-                            heureDepart = None
+                        if heure_depart_timestamp < 0:
+                            heure_depart = None
                         else:
-                            heureDepart = datetime.fromtimestamp(heureDepart_timestamp).time()
+                            heure_depart = datetime.fromtimestamp(heure_depart_timestamp).time()
 
                         # Convertir dureeCourse de millisecondes à un format lisible
                         duree_course_ms = course.get("dureeCourse", 0)
@@ -135,7 +150,8 @@ def call_api():
                         incidents_type_str = ' | '.join(incidents_type)
                         incidents_participants_str = ' | '.join([', '.join(map(str, participants)) for participants in incidents_participants])
 
-                        specialites = reunion.get("specialites", [None, None])  # Deux spécialités ou None
+                        # Gestion des spécialités
+                        specialites = reunion.get("specialites", [None, None])  
                         specialite_1 = specialites[0] if len(specialites) > 0 else None
                         specialite_2 = specialites[1] if len(specialites) > 1 else None
 
@@ -143,12 +159,16 @@ def call_api():
                         ordre_arrivee = course.get("ordreArrivee", [])
                         ordre_arrivee_padded = [ordre[0] if isinstance(ordre, list) else ordre for ordre in (ordre_arrivee + [None] * (5 - len(ordre_arrivee)))]
 
+                        # Tronquer les conditions si nécessaire
+                        conditions = course.get("conditions", "")
+                        if len(conditions) > 3000:
+                            conditions = conditions[:3000]
+
                         course_data = {
-                            "id_course": id_course,
-                            "id_reunion": id_reunion,
+                            "id_reunion": reunion_data['id_reunion'],
                             "libelle": course.get("libelle"),
                             "libelle_court": course.get("libelleCourt"),
-                            "heure_depart": heureDepart,
+                            "heure_depart": heure_depart,
                             "parcours": course.get("parcours"),
                             "distance": course.get("distance"),
                             "distance_unit": course.get("distanceUnit"),
@@ -157,7 +177,7 @@ def call_api():
                             "specialite_1": specialite_1,
                             "specialite_2": specialite_2,
                             "condition_sexe": course.get("conditionSexe"),
-                            "conditions": course.get("conditions"),
+                            "conditions": conditions,
                             "statut": course.get("statut"),
                             "categorie_statut": course.get("categorieStatut"),
                             "duree_course": course.get("dureeCourse"),
@@ -194,7 +214,6 @@ def call_api():
                             json_data_participants = response_participants.json()
 
                             for participant in json_data_participants["participants"]:
-                                id_participation += 1
 
                                 # Convertir dureeCourse de millisecondes à un format lisible
                                 temps_obtenu_ms = participant.get("tempsObtenu", 0)
@@ -202,27 +221,26 @@ def call_api():
                                 temps_obtenu_formatted = f"{temps_obtenu_minutes}m {temps_obtenu_seconds}s"
 
                                 participation_data = {
-                                    "id_participation": id_participation,
-                                    "id_course": id_course,
+                                    "id_course": num_course,
                                     "nom": participant.get("nom"),
                                     "numero_cheval": participant.get("numPmu"),
                                     "age": participant.get("age"),
                                     "sexe": participant.get("sexe"),
                                     "race": participant.get("race"),
-                                    "statut": participant.get("statut"),
+                                    "statut_au_depart": participant.get("statut"),
                                     "proprietaire": participant.get("proprietaire"),
                                     "entraineur": participant.get("entraineur"),
                                     "driver": participant.get("driver"),
                                     "driverChange": participant.get("driverChange"),
                                     "code_robe": participant.get("robe", {}).get("code"),
-                                    "libelleCourt_robe": participant.get("robe", {}).get("libelleCourt"),
-                                    "libelleLong_robe": participant.get("robe", {}).get("libelleLong"),
+                                    "libelle_court_robe": participant.get("robe", {}).get("libelleCourt"),
+                                    "libelle_long_robe": participant.get("robe", {}).get("libelleLong"),
                                     "nombre_courses": participant.get("nombreCourses"),
                                     "nombre_victoires": participant.get("nombreVictoires"),
                                     "nombre_places": participant.get("nombrePlaces"),
                                     "nom_pere": participant.get("nomPere"),
                                     "nom_mere": participant.get("nomMere"),
-                                    "ordre_arrivee": participant.get("ordreArrivee"),
+                                    "place_dans_la_course": participant.get("ordreArrivee"),
                                     "jument_pleine": participant.get("jumentPleine"),
                                     "engagement": participant.get("engagement"),
                                     "supplement": participant.get("supplement"),
@@ -237,16 +255,27 @@ def call_api():
 
 
                         #------------------------------------------------------------------- Construction de la table participations -------------------------------------------------------------
+            
+            # Sauvegarde des données en base à chaque itération
+            df_programmes.to_sql('programmes_des_courses', engine, if_exists='append', index=False)
+            df_reunions.to_sql('reunion', engine, if_exists='append', index=False)
+            df_courses.to_sql('courses', engine, if_exists='append', index=False)
+            df_participations.to_sql('participations_aux_courses', engine, if_exists='append', index=False)
+
+            # Réinitialiser les DataFrames après chaque itération
+            df_programmes = pd.DataFrame()
+            df_reunions = pd.DataFrame()
+            df_courses = pd.DataFrame()
+            df_participations = pd.DataFrame()
+
+            # Mettre à jour le fichier avec la date actuelle
+            write_last_run_date(current_date.strftime("%d%m%Y"))
 
         else:
             print(f"Échec de la récupération des données, code de statut : {response.status_code}")
 
         # Passer à la date suivante
         current_date += timedelta(days=1)
-
-    df_programmes.to_sql('programmes_des_courses', engine, if_exists='append', index=False)
-    df_reunions.to_sql('reunion', engine, if_exists='append', index=False)
-    #df_courses.to_sql('courses', engine, if_exists='append', index=False)
 
     session.close()
     message = "Remplissage terminé"

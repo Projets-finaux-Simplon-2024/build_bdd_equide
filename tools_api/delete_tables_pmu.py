@@ -1,8 +1,11 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine, MetaData, Table, text
 from sqlalchemy.orm import sessionmaker
+import os
+
+LAST_RUN_FILE = 'last_run_date.txt'
 
 def delete_tables_pmu():
     # Connexion à la base de données
@@ -11,10 +14,6 @@ def delete_tables_pmu():
     session = Session()
 
     try:
-        # Récupérer les métadonnées
-        meta = MetaData()
-        meta.reflect(bind=engine)
-
         # Définir les tables avec respect de l'ordre des dépendances
         tables = [
             "participations_aux_courses",
@@ -23,14 +22,18 @@ def delete_tables_pmu():
             "programmes_des_courses"
         ]
 
-        # Supprimer le contenu des tables en respectant l'ordre
+        # Truncate tables en respectant l'ordre
         for table_name in tables:
-            table = Table(table_name, meta, autoload_with=engine)
-            session.execute(table.delete())
-        
+            session.execute(text(f'TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE'))
+
         # Commit des changements
         session.commit()
-        message = "Les tables ont été purgées avec succès"
+
+        # Supprimer le fichier last_run_date.txt s'il existe
+        if os.path.exists(LAST_RUN_FILE):
+            os.remove(LAST_RUN_FILE)
+        
+        message = "Les tables ont été purgées avec succès, les identifiants ont été réinitialisés et le fichier last_run_date.txt a été supprimé."
     except Exception as e:
         # Rollback en cas d'erreur
         session.rollback()

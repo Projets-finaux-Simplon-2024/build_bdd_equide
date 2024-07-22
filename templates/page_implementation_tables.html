@@ -4,7 +4,7 @@
     <style>
         .result-console {
             width: 100%;
-            height: 10vw; /* Ajustez la hauteur selon vos besoins */
+            height: 5vw; /* Ajustez la hauteur selon vos besoins */
             border: 1px solid #7e7e7e;
             border-radius: 10px;
             margin: 10px;
@@ -52,15 +52,24 @@
 {% endblock %} 
 
 {% block header %}
-    <h1>Implémentation des tables</h1>
+    <h1>Création des tables tel que</h1>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <h2>Création des tables tel que</h2>
     <div class="row">
         <img src="{{ url_for('static', filename='images/diagram_equide.png') }}" width="100%">
     </div>
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-6 text-left">
+                <button type="submit" class="btn btn-danger" name="action" value="retour">Retour</button>
+            </div>
+            <div class="col-md-6 text-right">
+                <button type="submit" class="btn btn-primary" name="action" value="creation" onclick="startTimer(); showModal();">Création</button>
+            </div>
+        </div>
+    </form>
     <div class="row">
         <div class="result-console">
             {% if creation_info %}
@@ -73,16 +82,6 @@
             {% endif %}
         </div>
     </div>
-    <form method="POST">
-        <div class="row">
-            <div class="col-md-6 text-left">
-                <button type="submit" class="btn btn-danger" name="action" value="retour">Retour</button>
-            </div>
-            <div class="col-md-6 text-right">
-                <button type="submit" class="btn btn-primary" name="action" value="creation" onclick="startTimer(); showModal();">Création</button>
-            </div>
-        </div>
-    </form>
 </div>
 
 <!-- Modal -->
