@@ -11,6 +11,7 @@ import subprocess
 import sys
 import psycopg2
 import pandas as pd
+import re
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from psycopg2 import sql
@@ -372,6 +373,11 @@ def remplissage_table_chevaux_tf():
                 result = session.execute(text("SELECT 1 FROM chevaux_trotteur_francais WHERE nom_tf = :nom_tf"), {'nom_tf': nom_tf}).fetchone()
                 return result is not None
 
+            def clean_nom_tf(nom_tf):
+                """Clean the nom_tf by removing characters after certain patterns."""
+                match = re.match(r"^[^1'\"(]+", nom_tf)
+                return match.group(0).strip() if match else nom_tf.strip()
+
             # Parcourir tous les fichiers CSV du dossier
             for fichier in os.listdir(dossier_resultats):
                 if fichier.endswith('.csv'):
@@ -385,6 +391,9 @@ def remplissage_table_chevaux_tf():
                         
                         # Garder seulement les colonnes nécessaires pour la table
                         df = df[list(column_mapping.values())]
+                        
+                        # Nettoyer les noms des chevaux
+                        df['nom_tf'] = df['nom_tf'].apply(clean_nom_tf)
                         
                         # Remplacer les valeurs "Non renseigné" dans la colonne 'date_decee_tf' par des valeurs NaN
                         df['date_decee_tf'] = df['date_decee_tf'].replace('Non renseigné', pd.NA)

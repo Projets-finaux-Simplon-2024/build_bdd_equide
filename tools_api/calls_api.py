@@ -36,6 +36,8 @@ def call_api():
     df_courses = pd.DataFrame()
     df_participations = pd.DataFrame()
 
+    id_course = 0
+
     # Lire la date de début à partir du fichier ou définir une date par défaut (Date du premier enregistrement 19-02-2013)
     start_date_str = read_last_run_date()
     start_date = datetime.strptime(start_date_str, "%d%m%Y")
@@ -127,7 +129,7 @@ def call_api():
                 
 
                     for course in json_data_courses["courses"]:
-
+                        id_course += 1
                         heure_depart_timestamp = course.get("heureDepart", 0) // 1000
 
                         # Gérer les timestamps négatifs
@@ -165,6 +167,7 @@ def call_api():
                             conditions = conditions[:3000]
 
                         course_data = {
+                            "id_course":id_course,
                             "id_reunion": reunion_data['id_reunion'],
                             "libelle": course.get("libelle"),
                             "libelle_court": course.get("libelleCourt"),
@@ -199,6 +202,7 @@ def call_api():
                             "incidents_type": incidents_type_str,
                             "incidents_participants": incidents_participants_str,
                         }
+
                         df_courses = pd.concat([df_courses, pd.DataFrame([course_data])], ignore_index=True)
                         #------------------------------------------------------------------- Construction de la table courses --------------------------------------------------------------------
 
@@ -221,7 +225,7 @@ def call_api():
                                 temps_obtenu_formatted = f"{temps_obtenu_minutes}m {temps_obtenu_seconds}s"
 
                                 participation_data = {
-                                    "id_course": num_course,
+                                    "id_course": id_course,
                                     "nom": participant.get("nom"),
                                     "numero_cheval": participant.get("numPmu"),
                                     "age": participant.get("age"),
