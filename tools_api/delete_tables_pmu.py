@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 LAST_RUN_FILE = 'last_run_date.txt'
+LAST_RUN_ID_COURSE = 'last_run_id_course.txt'
 
 def delete_tables_pmu():
     # Connexion à la base de données
@@ -32,6 +33,10 @@ def delete_tables_pmu():
         # Supprimer le fichier last_run_date.txt s'il existe
         if os.path.exists(LAST_RUN_FILE):
             os.remove(LAST_RUN_FILE)
+
+        # Supprimer le fichier last_run_date.txt s'il existe
+        if os.path.exists(LAST_RUN_ID_COURSE):
+            os.remove(LAST_RUN_ID_COURSE)
         
         message = "Les tables ont été purgées avec succès, les identifiants ont été réinitialisés et le fichier last_run_date.txt a été supprimé."
     except Exception as e:

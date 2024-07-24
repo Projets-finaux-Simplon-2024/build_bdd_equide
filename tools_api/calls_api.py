@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 LAST_RUN_FILE = 'last_run_date.txt'
+LAST_RUN_ID_COURSE = 'last_run_id_course.txt'
 
 def read_last_run_date():
     if os.path.exists(LAST_RUN_FILE):
@@ -13,14 +14,30 @@ def read_last_run_date():
             return file.read().strip()
     return '19022013'
 
+def read_last_run_id_course():
+    if os.path.exists(LAST_RUN_ID_COURSE):
+        with open(LAST_RUN_ID_COURSE, 'r') as file:
+            return file.read().strip()
+    return 0
+
 def write_last_run_date(date_str):
     with open(LAST_RUN_FILE, 'w') as file:
         file.write(date_str)
+
+def write_last_id_course(id_course):
+    with open(LAST_RUN_ID_COURSE, 'w') as file:
+        file.write(id_course)
 
 def check_date_exists(engine, date_str):
     query = text("SELECT EXISTS (SELECT 1 FROM programmes_des_courses WHERE date_programme = :date_programme)")
     with engine.connect() as conn:
         result = conn.execute(query, {'date_programme': date_str}).scalar()
+    return result
+
+def check_courses_id_exists(engine, id_course):
+    query = text("SELECT EXISTS (SELECT 1 FROM courses WHERE id_course = :id_course)")
+    with engine.connect() as conn:
+        result = conn.execute(query, {'id_course': id_course}).scalar()
     return result
 
 def call_api():
@@ -36,7 +53,11 @@ def call_api():
     df_courses = pd.DataFrame()
     df_participations = pd.DataFrame()
 
-    id_course = 0
+    id_course = read_last_run_id_course()
+    id_course = int(id_course)
+    if check_courses_id_exists(engine, id_course):
+        print(f"L'id des courses {id_course} existent déjà, initialisation à l'id suivant.")
+        id_course += 1
 
     # Lire la date de début à partir du fichier ou définir une date par défaut (Date du premier enregistrement 19-02-2013)
     start_date_str = read_last_run_date()
@@ -274,6 +295,7 @@ def call_api():
 
             # Mettre à jour le fichier avec la date actuelle
             write_last_run_date(current_date.strftime("%d%m%Y"))
+            write_last_id_course(str(id_course))
 
         else:
             print(f"Échec de la récupération des données, code de statut : {response.status_code}")
