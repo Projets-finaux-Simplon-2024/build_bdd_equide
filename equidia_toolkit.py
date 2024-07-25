@@ -333,7 +333,6 @@ def remplissage_table_chevaux_tf():
             # Connexion à la base de données avec le port spécifié
             engine = create_engine('postgresql://admin:admin@localhost:5434/bdd_equide')
             Session = sessionmaker(bind=engine)
-            session = Session()
 
             # Mapping des colonnes du CSV aux colonnes de la table
             column_mapping = {
@@ -368,11 +367,6 @@ def remplissage_table_chevaux_tf():
                     df[col] = df[col].apply(lambda x: x[:max_length] if isinstance(x, str) else x)
                 return df
 
-            def entry_exists(nom_tf, session):
-                """Check if an entry with the given nom_tf already exists in the database."""
-                result = session.execute(text("SELECT 1 FROM chevaux_trotteur_francais WHERE nom_tf = :nom_tf"), {'nom_tf': nom_tf}).fetchone()
-                return result is not None
-
             def clean_nom_tf(nom_tf):
                 """Clean the nom_tf by removing characters after certain patterns."""
                 match = re.match(r"^[^1'\"(]+", nom_tf)
@@ -403,19 +397,16 @@ def remplissage_table_chevaux_tf():
                         
                         # Tronquer les valeurs des colonnes selon les longueurs maximales
                         df = truncate_column_values(df, column_max_lengths)
-                        
-                        # Insérer les données dans la table chevaux_trotteur_francais, en vérifiant les doublons
-                        for index, row in df.iterrows():
-                            if not entry_exists(row['nom_tf'], session):
-                                row.to_frame().T.to_sql('chevaux_trotteur_francais', engine, if_exists='append', index=False)
+
+                        with Session() as session:
+                            # Insérer les données dans la table chevaux_trotteur_francais sans vérifier les doublons
+                            df.to_sql('chevaux_trotteur_francais', engine, if_exists='append', index=False)
                         
                         # Ajouter le nom du fichier à la liste des fichiers uploadés
                         fichiers_uploades.append(fichier)
                     except Exception as e:
                         # Gérer les erreurs d'importation ici
                         print(f"Erreur lors de l'importation du fichier {fichier}: {e}")
-                    finally:
-                        session.close()
     
     # Rendre la page avec les fichiers uploadés
     return render_template('page_remplissage_chevaux_tf.html', fichiers_uploades=fichiers_uploades)
