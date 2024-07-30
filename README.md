@@ -47,6 +47,8 @@ Pour faire fonctionner le programme il est nécéssaire d'avoir Python et [:link
 ### Récupération de l'application **SANS** Git :surfer:
 Pour récupérer l'application sans Git il faut télécharger le zip
 
+![Capture d'écran 2024-07-30 172651](https://github.com/user-attachments/assets/3c6d65c4-b747-4d28-b2cd-cbfe88b2f79b)
+
 Puis de le décompresser ou vous le souhaitez !
 
 
@@ -58,6 +60,8 @@ Puis de le décompresser ou vous le souhaitez !
 
 ### Démarrage de l'application
 Si vous avez windows vous pouvez simplement utiliser le .bat(avec terminal) ou le .exe(sans terminal).
+
+![Capture d'écran 2024-07-30 172740](https://github.com/user-attachments/assets/38082fe4-8c23-460b-b48f-9803fddf43dd)
 
 > [!IMPORTANT]
 > Sous linux vous devrez effectuer les commandes suivantes dans le répertoire du projet
@@ -72,6 +76,27 @@ Si vous avez windows vous pouvez simplement utiliser le .bat(avec terminal) ou l
 
 ## :heavy_plus_sign: Utilisation de l'application
 L'application a été construite de façon a créer un cheminement pour la création puis l'agrégation des données dans la base de données.
+
+**Etape 1 : Récupération de la liste des chevaux**
+
+*Scraping du site de l'IFCE afin d'obtenir une liste de chevaux trotteur français avec les liens IFCE correspondants dans des tables en csv*
+
+![Capture d'écran 2024-07-30 175801](https://github.com/user-attachments/assets/16b52011-31e6-43b4-bdd6-23b5192cb111)
+
+> [!NOTE]
+> Cette page permet de
+> - vérifier le temps de scraping qui peut être assez long
+> - séléctionner une ou plusieurs années a scraper
+> - d'utiliser les tags pour séléctionner plusieurs années
+> - ouvrir le dossier résultats dans le projet qui est le dossier ou sont sauvegarder les csv par défaut
+
+**Etape 2 : Création d'un container postgres**
+
+**Etape 3 : Implémentation des tables**
+
+**Etape 4 : Remplissage de la BDD avec des fichiers plats**
+
+**Etape 5 : Remplissage de la BDD avec une API**
 
 ## :heavy_plus_sign: Annexes
 ### Librairies
