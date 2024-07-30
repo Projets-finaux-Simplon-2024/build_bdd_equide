@@ -407,7 +407,7 @@ def remplissage_table_chevaux_tf():
                     except Exception as e:
                         # Gérer les erreurs d'importation ici
                         print(f"Erreur lors de l'importation du fichier {fichier}: {e}")
-    
+                        
     # Rendre la page avec les fichiers uploadés
     return render_template('page_remplissage_chevaux_tf.html', fichiers_uploades=fichiers_uploades)
 # |--------------------------------------------------------------------------------------------------------------------------------------------|
