@@ -128,7 +128,7 @@ L'application a été construite de façon a créer un cheminement pour la créa
 
 > [!NOTE]
 > Le bouton est préréglé pour implémenter les tables dans la bdd précédemment créer.
-> Voir le [:link:schéma de la bdd à jour](https://github.com/Projets-finaux-Simplon-2024/build_bdd_equide/edit/main/README.md#sch%C3%A9ma-de-la-bdd-%C3%A0-jour)
+> Voir le [:link:schéma de la bdd à jour](#schéma-de-la-bdd-à-jour)
 
 ### **Etape 4 : Remplissage de la BDD avec des fichiers plats**
 
