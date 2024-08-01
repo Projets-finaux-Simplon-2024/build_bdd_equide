@@ -4,7 +4,7 @@
 ---
 ---
 ## :heavy_plus_sign: Présentation
-Cette application a pour but de créer, agréger et peupler une base de données afin d'étudier des données équidés et plus particulièrement de la race trotteur français. La problématique de départ et d'essayer de déterminer les couples les plus optimaux afin d'obtenir des poulains tendant a avoir les qualités que l'ont recherche, pour la compétition ou pour l'élevage. Cette base de données est une esquisse et est incomplète. La bdd créer avec ce programme est pré configuré pour fonctionner avec son [:link:API équidé](https://github.com/Projets-finaux-Simplon-2024/api_equide).
+Cette application a pour but de créer, agréger et peupler une base de données afin d'étudier des données équidés et plus particulièrement de la race trotteur français. La problématique de départ est d'essayer de déterminer les couples les plus optimaux afin d'obtenir des poulains tendant à avoir les qualités que l'on recherche, pour la compétition ou pour l'élevage. Cette base de données est une esquisse et est incomplète. La bdd créée avec ce programme est pré configurée pour fonctionner avec son [:link:API équidé](https://github.com/Projets-finaux-Simplon-2024/api_equide).
 
 ---
 ## :heavy_plus_sign: Sources
@@ -14,10 +14,10 @@ La source du scraping est le site de l'IFCE et notamment leur moteur de recherch
 [:link:https://infochevaux.ifce.fr/fr/info-chevaux](https://infochevaux.ifce.fr/fr/info-chevaux?utm_source=Effiweb&utm_medium=Menu%20SIRE%20Demarches&utm_campaign=SIRE%20%E2%80%93%20Infochevaux)
 
 ### Sources des appels API
-La source des données utilisé pour faire les appels API concerne les résultats de course PMU (Pari Mutuel Urbain) trouvé sur le site [:link:developpez.net](https://www.developpez.net/forums/blogs/1191628-voroltinquo/b10558/windev-exploiter-resultat-api/) qui a déjà fait l'objet d'une étude. Cependant il n'est pas possible d'en vérifier la fiabilité.
+La source des données utilisée pour faire les appels API concerne les résultats de course PMU (Pari Mutuel Urbain) trouvés sur le site [:link:developpez.net](https://www.developpez.net/forums/blogs/1191628-voroltinquo/b10558/windev-exploiter-resultat-api/) qui a déjà fait l'objet d'une étude. Cependant il n'est pas possible d'en vérifier la fiabilité.
 
 > [!NOTE]
-> ## Documentation reconstitué de l'API PMU
+> ## Documentation reconstituée de l'API PMU
 > ### **Endpoint jour**
 > - endpoint qui affiche l'ensemble des réunions de la journée 
 > - Exemple : https://offline.turfinfo.api.pmu.fr/rest/client/5/programme/01032013
@@ -31,15 +31,15 @@ La source des données utilisé pour faire les appels API concerne les résultat
 > - Exemple : https://offline.turfinfo.api.pmu.fr/rest/client/5/programme/01032013/R1/C1
 >
 > ### **Endpoint participations**
-> - endpoint qui affiche le détails des participants à la course C1 de R1 du 01032013
+> - endpoint qui affiche le détail des participants à la course C1 de R1 du 01032013
 > - Exemple : https://offline.turfinfo.api.pmu.fr/rest/client/7/programme/01032013/R1/C1/participants
 >
 > En faisant varier des éléments de l'url on réussi a reconstitué la base de données
-> `https://offline.turfinfo.api.pmu.fr/rest/client/7/programme[jour]/[reunbion]/[course]/participants`
+> `https://offline.turfinfo.api.pmu.fr/rest/client/7/programme[jour]/[reunion]/[course]/participants`
 
 
 ### Autres sources à exploiter
-Pour vérifier la fiabilité des résultats aux courses du PMU on pourrais croiser avec une autre source incontournable des éleveurs de chevaux de la race trotteur francais : [:link:www.letrot.com](https://www.letrot.com/)
+Pour vérifier la fiabilité des résultats aux courses du PMU on pourrait croiser avec une autre source incontournable des éleveurs de chevaux de la race trotteur francais : [:link:www.letrot.com](https://www.letrot.com/)
 
 ---
 ## :heavy_plus_sign: Installlation
@@ -54,7 +54,7 @@ Pour récupérer l'application sans Git il faut télécharger le zip
 
 ![Capture d'écran 2024-07-30 172651](https://github.com/user-attachments/assets/3c6d65c4-b747-4d28-b2cd-cbfe88b2f79b)
 
-Puis de le décompresser ou vous le souhaitez !
+Puis le décompresser où vous le souhaitez !
 
 
 ### Récupération de l'application **AVEC** Git :octocat:
@@ -64,7 +64,7 @@ Puis de le décompresser ou vous le souhaitez !
 3. Effectuer la commande ```git clone https://github.com/Projets-finaux-Simplon-2024/build_bdd_equide.git```
 
 ### Démarrage de l'application
-Si vous avez windows vous pouvez simplement utiliser le .bat(avec terminal) ou le .exe(sans terminal).
+Si vous avez windows vous pouvez simplement utiliser le .bat (avec terminal) ou le .exe (sans terminal).
 
 ![Capture d'écran 2024-07-30 172740](https://github.com/user-attachments/assets/38082fe4-8c23-460b-b48f-9803fddf43dd)
 
@@ -90,11 +90,11 @@ L'application a été construite de façon a créer un cheminement pour la créa
 ![Capture d'écran 2024-07-30 175801](https://github.com/user-attachments/assets/16b52011-31e6-43b4-bdd6-23b5192cb111)
 
 > [!NOTE]
-> Cette page permet de
-> - vérifier le temps de scraping qui peut être assez long
-> - séléctionner une ou plusieurs années a scraper
+> Cette page permet:
+> - de vérifier le temps de scraping qui peut être assez long
+> - de séléctionner une ou plusieurs années a scraper
 > - d'utiliser les tags pour séléctionner plusieurs années
-> - ouvrir le dossier résultats dans le projet qui est le dossier ou sont sauvegarder les csv par défaut
+> - d'ouvrir le dossier résultats dans le projet qui est le dossier où sont sauvegarder les csv par défaut
 
 ### **Etape 2 : Création d'un container postgres**
 
@@ -104,7 +104,7 @@ L'application a été construite de façon a créer un cheminement pour la créa
 
 > [!NOTE]
 > Créer un container postgres via une image postgres pull avec Docker.
-> Le container est pré réglé pour être utilisé en local avec l'api tel que
+> Le container est pré réglé pour être utilisé en local avec l'API tel que:
 > ```
 > nom du container : container_equide
 > POSTGRES_USER = admin 
@@ -115,12 +115,12 @@ L'application a été construite de façon a créer un cheminement pour la créa
 > On en déduit la chaîne de connexion local pour Dbeaver : ```jdbc:postgresql://localhost:5434/bdd_equide```
 
 > [!WARNING]
-> Pour une connexion entre deux containers, si on veut utiliser l'image de l'[:link:API équidé](https://github.com/Projets-finaux-Simplon-2024/api_equide) plutôt que le code. Il faut reconstruire la chaîne de connexion.
+> Pour une connexion entre deux containers, si on veut utiliser l'image de l'[:link:API équidé](https://github.com/Projets-finaux-Simplon-2024/api_equide) plutôt que le code, il faut reconstruire la chaîne de connexion:
 > 1. faire ```docker inspect container_equide```
 > 2. récupérer la valeur de IPAddress dans le json
-> 3. on récupére le port de postgres par défaut soit 5432 et **NON** le port qui a été remapper précédemment
+> 3. on récupére le port de postgres par défaut soit 5432 et **NON** le port qui a été remappé précédemment
 > 4. on récupére les identifiants de la base de données ainsi que son nom
-> 5. Résultat : ```postgresql://admin:admin@172.17.0.2:5432/bdd_equide``` cete chaîne de connexion et la chaîne de connexion à mettre à la création du container de l'[:link:API équidé](https://github.com/Projets-finaux-Simplon-2024/api_equide)
+> 5. Résultat : ```postgresql://admin:admin@172.17.0.2:5432/bdd_equide``` cette chaîne de connexion est la chaîne de connexion à mettre à la création du container de l'[:link:API équidé](https://github.com/Projets-finaux-Simplon-2024/api_equide)
 
 ### **Etape 3 : Implémentation des tables**
 
@@ -129,7 +129,7 @@ L'application a été construite de façon a créer un cheminement pour la créa
 ![Capture d'écran 2024-07-30 175949](https://github.com/user-attachments/assets/c13b6311-336b-45fc-bf2e-8cd8eadca5c2)
 
 > [!NOTE]
-> Le bouton est préréglé pour implémenter les tables dans la bdd précédemment créer.
+> Le bouton est préréglé pour implémenter les tables dans la bdd précédemment créée.
 > Voir le [:link:schéma de la bdd à jour](#schéma-de-la-bdd-à-jour)
 
 ### **Etape 4 : Remplissage de la BDD avec des fichiers plats**
@@ -146,10 +146,10 @@ L'application a été construite de façon a créer un cheminement pour la créa
 ![Capture d'écran 2024-07-30 180022](https://github.com/user-attachments/assets/18718d24-352f-405e-bd7a-758988648314)
 
 > [!NOTE]
-> Les tables remplis sont remplis avec les endpoints de l'api PMU tel que :
+> Les tables remplies sont remplies avec les endpoints de l'api PMU tel que :
 > - **programme des courses avec le endpoint jour** : permet de construire une table avec un id issu de la date. Nécéssaire pour l'identification de la date d'une course.
-> - **reunion avec le endpoint reunion** : permet de construire une table qui liste les reunions et associe un id reunion issu de l'id date de la table précédente.
-> - **courses avec le endpoint courses** : permet de récupérer toute les courses par id de reunion. 
+> - **réunion avec le endpoint réunion** : permet de construire une table qui liste les réunions et associe un id réunion issu de l'id date de la table précédente.
+> - **courses avec le endpoint courses** : permet de récupérer toute les courses par id de réunion. 
 > - **participations avec le endpoint participation** : permet de récupérer toute les participations par id de course.
 >
 > (Une journée peut avoir plusieurs réunion, une réunion peut avoir plusieurs courses, une course a plusieurs participants.)
@@ -163,9 +163,9 @@ L'application a été construite de façon a créer un cheminement pour la créa
 
 ![Capture d'écran 2024-07-30 180053](https://github.com/user-attachments/assets/0122fff9-bccd-4a76-ba79-1f83f45f1e37)
 
-### **Message d'erreur : Le container n'est pas créer**
+### **Message d'erreur : Le container n'est pas créé**
 
-*Renvoi une page d'erreur si le container n'est pas créer ou n'est pas trouver avec les préréglages*
+*Renvoi une page d'erreur si le container n'est pas créé ou n'est pas trouvé avec les préréglages*
 
 ![Capture d'écran 2024-07-30 175844](https://github.com/user-attachments/assets/5af0a7ee-9f6c-4e19-a12f-78d2cb3cfc3a)
 
@@ -176,7 +176,7 @@ L'application a été construite de façon a créer un cheminement pour la créa
 - **Flask** : Framework web léger permettant de créer des applications web et des API.
 - **Webview** : Librairie permettant d'intégrer des composants d'interface utilisateur web dans des applications de bureau.
 
-:floppy_disk:**Traitement(scraping)**
+:floppy_disk:**Traitement (scraping)**
 - **Selenium** : Outil pour l'automatisation des navigateurs web, utilisé pour tester des applications web ou extraire des données.
 - **BeautifulSoup** : Librairie pour le parsing et l'extraction de données de fichiers HTML et XML.
 
