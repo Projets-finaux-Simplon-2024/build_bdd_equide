@@ -1,4 +1,6 @@
-# API de la base de données équidé
+![icons8-cheval-bizarre-96](https://github.com/user-attachments/assets/36ed1b98-ba07-4721-b91d-3ca9cae42c08)
+
+# Agrégateur pour la bdd équidé
 ---
 ---
 ## :heavy_plus_sign: Présentation
