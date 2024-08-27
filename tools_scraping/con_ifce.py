@@ -6,7 +6,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Configuration du pilote Selenium et ouverture du navigateur ---------------------------------------------------------------------------------------
 # Configurer les options Chrome pour le mode headless
 # Chemin absolu vers le fichier chromedriver.exe
-CHROME_DRIVER = "D:/aProjects/projet_equide/build_bdd_equide/chromedriver-win64/chromedriver.exe"
+CHROME_DRIVER = "../build_bdd_equide/chromedriver-win64/chromedriver.exe"
 
 def connexion_ifce():
     try:
